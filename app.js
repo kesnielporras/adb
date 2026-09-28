@@ -2238,4 +2238,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateAuthUI();
     renderSections();
     await checkUrlForArticle();
-}); 
+})
