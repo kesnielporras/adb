@@ -1745,15 +1745,15 @@ main {
 
 <!-- SECCIÓN DE FOTO (Galería) - Ahora está FUERA del videoSection -->
 <div id="photoSection" style="display:none;">
-    <label for="artPhotoFile">Foto *</label>
+    <label for="artPhotoFile">Fotos * (puedes seleccionar varias)</label>
     <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-        <input type="file" id="artPhotoFile" accept="image/*" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+        <input type="file" id="artPhotoFile" accept="image/*" multiple style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
         <button type="button" id="clearPhotoBtn" style="background: #ddd; color: #333; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-family: var(--font-title); font-size: 11px; text-transform: uppercase;">✕ Quitar</button>
     </div>
-    <div id="photoPreviewContainer" style="display: none; margin-bottom: 15px;">
-        <img id="photoPreview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+    <div id="photoPreviewContainer" style="display: none; margin-bottom: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;">
+        <!-- Aquí se inyectarán las miniaturas -->
     </div>
-    <label for="artPhoto">O pega una URL de imagen</label>
+    <label for="artPhoto">O pega una URL de imagen (opcional, para 1 sola foto)</label>
     <input type="url" id="artPhoto" placeholder="https://ejemplo.com/foto.jpg">
 </div>
                 

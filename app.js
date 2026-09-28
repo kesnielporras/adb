@@ -1376,6 +1376,18 @@ function resetCMS() {
     const videoDescInput = document.getElementById('artVideoDescription');
 if (videoDescInput) videoDescInput.value = '';
 
+    // ⭐ Limpiar fotos
+    uploadedPhotoUrls = [];
+    const photoInput = document.getElementById('artPhotoFile');
+    if (photoInput) photoInput.value = '';
+    const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+    if (photoPreviewContainer) {
+        photoPreviewContainer.innerHTML = '';
+        photoPreviewContainer.style.display = 'none';
+    }
+    const artPhotoInput = document.getElementById('artPhoto');
+    if (artPhotoInput) artPhotoInput.value = '';
+
     setTimeout(() => {
         initTinyMCE();
         setEditorContent('');
@@ -1673,41 +1685,39 @@ uploadForm.addEventListener('submit', async (e) => {
     // ==========================================
     // CASO 1: FOTO (va a la tabla gallery)
     // ==========================================
-    if (contentType === 'photo') {
-        const finalPhoto = uploadedPhotoUrl || document.getElementById('artPhoto').value.trim();
-        if (!finalPhoto) {
-            showToast('Debes subir una foto o pegar una URL.', 'error', 'Campo requerido');
+        if (contentType === 'photo') {
+        // ⭐ Recolectar URLs: las subidas + la del campo URL manual (si hay)
+        const manualUrl = document.getElementById('artPhoto').value.trim();
+        let photoUrls = [...uploadedPhotoUrls];
+        if (manualUrl && !photoUrls.includes(manualUrl)) photoUrls.push(manualUrl);
+        
+        if (photoUrls.length === 0) {
+            showToast('Debes subir al menos una foto o pegar una URL.', 'error', 'Campo requerido');
             submitBtn.disabled = false;
             submitBtn.textContent = 'Publicar';
             return;
         }
         
-        if (editingArticleId) {
-            // Editar foto existente
-            const { error } = await supabaseClient.from('gallery').update({
-                title, description: summary, category, cat_name: catInfo.name,
-                author, image_url: finalPhoto
-            }).eq('id', editingArticleId);
-            if (error) {
-                showToast('Error: ' + error.message, 'error');
-                submitBtn.disabled = false; submitBtn.textContent = 'Guardar cambios';
-                return;
-            }
-            showToast(`"${title}" actualizado.`, 'success');
-        } else {
-            const { error } = await supabaseClient.from('gallery').insert({
-                title, description: summary, category, cat_name: catInfo.name,
-                author, author_id: currentUser.id,
-                image_url: finalPhoto,
-                reads: 'Nuevo'
-            });
-            if (error) {
-                showToast('Error: ' + error.message, 'error');
-                submitBtn.disabled = false; submitBtn.textContent = 'Publicar';
-                return;
-            }
-            showToast(`"${title}" publicado en la galería.`, 'success', '¡Listo!');
+        // ⭐ Insertar UNA fila por cada foto
+        const rows = photoUrls.map(url => ({
+            title,
+            description: summary,
+            category,
+            cat_name: catInfo.name,
+            author,
+            author_id: currentUser.id,
+            image_url: url,
+            reads: 'Nuevo'
+        }));
+        
+        const { error } = await supabaseClient.from('gallery').insert(rows);
+        if (error) {
+            showToast('Error: ' + error.message, 'error');
+            submitBtn.disabled = false; submitBtn.textContent = 'Publicar';
+            return;
         }
+        
+        showToast(`${rows.length} foto(s) publicada(s) en la galería.`, 'success', '¡Listo!');
         
         await loadGallery();
         submitBtn.disabled = false;
@@ -1994,7 +2004,7 @@ function showLogoutConfirm() {
 // ==========================================
 let galleryDB = [];
 let currentAlbum = null;
-let uploadedPhotoUrl = null;
+let uploadedPhotoUrls = [];   // ⭐ ahora es un array
 
 async function loadGallery() {
     try {
@@ -2174,30 +2184,45 @@ document.getElementById('photoViewerModal')?.addEventListener('click', (e) => {
 });
 
 // Subida de foto desde el CMS
+// Subida de MÚLTIPLES fotos desde el CMS
 document.getElementById('artPhotoFile')?.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
     
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        document.getElementById('photoPreview').src = event.target.result;
-        document.getElementById('photoPreviewContainer').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+    const previewContainer = document.getElementById('photoPreviewContainer');
+    previewContainer.innerHTML = '';
+    previewContainer.style.display = 'grid';
+    uploadedPhotoUrls = [];
     
-    const url = await uploadPhotoToSupabase(file);
-    if (url) {
-        uploadedPhotoUrl = url;
-        document.getElementById('artPhoto').value = url;
+    for (const file of files) {
+        // Preview local
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.style.cssText = 'width: 100%; height: 120px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);';
+            previewContainer.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+        
+        // Subir a Supabase
+        const url = await uploadPhotoToSupabase(file);
+        if (url) uploadedPhotoUrls.push(url);
+    }
+    
+    if (uploadedPhotoUrls.length > 0) {
+        document.getElementById('artPhoto').value = uploadedPhotoUrls[0]; // por si acaso
+        showToast(`${uploadedPhotoUrls.length} foto(s) subida(s).`, 'success');
     }
 });
 
 document.getElementById('clearPhotoBtn')?.addEventListener('click', () => {
     document.getElementById('artPhotoFile').value = '';
     document.getElementById('artPhoto').value = '';
-    document.getElementById('photoPreviewContainer').style.display = 'none';
-    document.getElementById('photoPreview').src = '';
-    uploadedPhotoUrl = null;
+    const previewContainer = document.getElementById('photoPreviewContainer');
+    previewContainer.innerHTML = '';
+    previewContainer.style.display = 'none';
+    uploadedPhotoUrls = [];
 });
 
 // ==========================================
