@@ -35,10 +35,14 @@ const categoryMap = {
     'futbol-americano': { name: 'Fútbol Americano' },
     'tenis': { name: 'Tenis' },
     'atletismo': { name: 'Atletismo' },
+    'entrevistas': { name: 'Entrevistas' },
+    'opinion': { name: 'Opinión' },
     'otros': { name: 'Otros Deportes' }
 };
 
-const mainCategories = [
+    const mainCategories = [
+    { id: 'entrevistas', name: 'Entrevistas' },
+    { id: 'opinion', name: 'Opinión' },
     { id: 'futbol', name: 'Fútbol' },
     { id: 'basquetbol', name: 'Básquetbol' },
     { id: 'beisbol', name: 'Béisbol' },
@@ -56,15 +60,28 @@ const mainCategories = [
 // 2. CARGA DE DATOS
 // ==========================================
 async function loadState() {
-    // ⭐ SIEMPRE cargar los artículos, sin importar si hay sesión o no
     try {
+        // 1. Cargar artículos SIN JOIN
         const { data: articles, error } = await supabaseClient
-            .from('articles').select('*').order('created_at', { ascending: false });
+            .from('articles')
+            .select('*')
+            .order('created_at', { ascending: false });
         
         if (error) {
             console.error('Error cargando artículos:', error);
             articlesDB = [];
         } else if (articles) {
+            // 2. Cargar TODOS los profiles para el mapa de avatares
+            const { data: profiles } = await supabaseClient
+                .from('profiles')
+                .select('id, avatar_url');
+            
+            const avatarMap = {};
+            if (profiles) {
+                profiles.forEach(p => { avatarMap[p.id] = p.avatar_url; });
+            }
+            
+            // 3. Mapear artículos
             articlesDB = articles.map(a => ({
                 id: a.id,
                 title: a.title,
@@ -79,6 +96,7 @@ async function loadState() {
                 content_type: a.content_type || 'article',
                 pages: a.pages,
                 reads: a.reads,
+                author_avatar: avatarMap[a.author_id] || null,
                 created_at: a.created_at
             }));
             console.log('✅ Artículos cargados:', articlesDB.length);
@@ -212,6 +230,7 @@ const editProfileForm = document.getElementById('editProfileForm');
 const editAvatarFile = document.getElementById('editAvatarFile');
 const editAvatarPreview = document.getElementById('editAvatarPreview');
 const editBio = document.getElementById('editBio');
+const editRoleTitle = document.getElementById('editRoleTitle');
 const editTwitter = document.getElementById('editTwitter');
 const editInstagram = document.getElementById('editInstagram');
 const editYoutube = document.getElementById('editYoutube');
@@ -492,6 +511,35 @@ function createVideoCardMultimedia(article, isFeatured = false) {
     return card;
 }
 
+// ==========================================
+// TARJETA "LAS VOCES DE ADB" (horizontal)
+// ==========================================
+function createVoiceCard(article) {
+    const card = document.createElement('div');
+    card.className = 'voces-card';
+    
+    const date = article.created_at ? new Date(article.created_at) : new Date();
+    const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    
+    card.innerHTML = `
+        <img class="voces-card-img" 
+             src="${article.image}" 
+             alt="${article.title}" 
+             loading="lazy"
+             onerror="this.src='https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=600&q=80'">
+        <div class="voces-card-body">
+            <div>
+                <div class="voces-card-author">${article.author}</div>
+                <div class="voces-card-title">${article.title}</div>
+            </div>
+            <div class="voces-card-meta">${dateStr}</div>
+        </div>
+    `;
+    
+    card.addEventListener('click', () => openReadingModal(article));
+    return card;
+}
+
 function toggleSaveArticle(articleId) {
     if (!currentUser) {
         showToast('Debes iniciar sesión.', 'error', 'Acceso');
@@ -533,6 +581,27 @@ function renderSections() {
     contentTabs.style.display = 'block';
 
     const filtered = getFilteredByTab();
+
+    // ⭐ BLOQUE DESTACADO "LAS VOCES DE ADB" (solo en pestaña Artículos)
+    if (currentTab === 'articles') {
+        const voces = filtered.filter(a => a.category === 'opinion');
+        if (voces.length > 0) {
+            const vocesSection = document.createElement('div');
+            vocesSection.className = 'voces-section';
+            vocesSection.innerHTML = `
+                <div class="voces-header">
+                    <h2 class="voces-title">🗣️ Las Voces de ADB</h2>
+                </div>
+                <div class="voces-scroll" id="voces-scroll-container"></div>
+            `;
+            sectionsContainer.appendChild(vocesSection);
+            
+            const scrollContainer = vocesSection.querySelector('#voces-scroll-container');
+            voces.slice(0, 10).forEach(article => {
+                scrollContainer.appendChild(createVoiceCard(article));
+            });
+        }
+    }
 
     if (filtered.length === 0) {
         const icon = currentTab === 'videos' ? '🎬' : '⚽';
@@ -578,7 +647,10 @@ function renderSections() {
     // ==========================================
     // VISTA DE ARTÍCULOS (formato por categorías, como antes)
     // ==========================================
-    mainCategories.forEach(cat => {
+        mainCategories.forEach(cat => {
+        // ⭐ Saltar "opinion" porque ya se muestra en el bloque "Las Voces de ADB"
+        if (cat.id === 'opinion') return;
+        
         const catArticles = filtered.filter(a => a.category === cat.id);
         if (catArticles.length === 0) return;
 
@@ -760,6 +832,46 @@ function openReadingModal(article) {
     readingTitle.textContent = article.title;
     readingMeta.textContent = `${article.catName} · Por ${article.author}`;
     
+    // ⭐ BLOQUE DE AUTOR (avatar + nombre + fecha)
+    const existingAuthorBlock = document.getElementById('readingAuthorBlock');
+    if (existingAuthorBlock) existingAuthorBlock.remove();
+    
+    const authorBlock = document.createElement('div');
+    authorBlock.className = 'reading-author-block';
+    authorBlock.id = 'readingAuthorBlock';
+    
+    const avatarUrl = article.author_avatar 
+        || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(article.author) + '&background=E63946&color=fff&size=90';
+    
+    // Formatear fecha
+    let dateStr = 'Fecha desconocida';
+    if (article.created_at) {
+        const d = new Date(article.created_at);
+        dateStr = 'Actualizado: ' + d.toLocaleDateString('es-ES', { 
+            day: '2-digit', month: 'short', year: 'numeric' 
+        }) + ' · ' + d.toLocaleTimeString('es-ES', { 
+            hour: '2-digit', minute: '2-digit' 
+        });
+    }
+    
+    authorBlock.innerHTML = `
+        <img class="reading-author-avatar" src="${avatarUrl}" alt="${article.author}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(article.author)}&background=E63946&color=fff&size=90'">
+        <div class="reading-author-info">
+            <div class="reading-author-name">${article.author}</div>
+            <div class="reading-author-date">${dateStr}</div>
+        </div>
+    `;
+    
+    // Insertar dentro del modal-header
+    const modalHeader = document.querySelector('.reading-modal .modal-header > div');
+    if (modalHeader) {
+        modalHeader.appendChild(authorBlock);
+    }
+    
+    // Click en el nombre del autor → abrir su perfil
+    authorBlock.querySelector('.reading-author-name').addEventListener('click', () => {
+        showAuthorProfile(article.author);
+    });    
     const newUrl = `${SITE_URL}?article=${article.id}`;
     window.history.pushState({ articleId: article.id }, '', newUrl);
     
@@ -834,11 +946,17 @@ async function showAuthorProfile(authorName) {
         // ⭐ Fotos del autor
         const photosOnly = galleryDB.filter(p => p.author === authorName);
         
-        profileAvatar.src = profile?.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(authorName) + '&background=E63946&color=fff&size=200';
+                profileAvatar.src = profile?.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(authorName) + '&background=E63946&color=fff&size=200';
         profileUsername.textContent = authorName;
         profileArticleCount.textContent = articlesOnly.length;
         profileVideoCount.textContent = videosOnly.length;
         profilePhotoCount.textContent = photosOnly.length;
+        
+        // ⭐ Rol del autor
+        const roleEl = document.getElementById('profileRole');
+        if (roleEl) {
+            roleEl.textContent = profile?.role_title || 'Colaborador';
+        }
         
         if (profile?.bio) {
             profileBio.textContent = profile.bio;
@@ -849,13 +967,13 @@ async function showAuthorProfile(authorName) {
         }
         
         let socialsHTML = '';
-        if (profile?.social_twitter) socialsHTML += `<a class="social-link" href="https://twitter.com/${profile.social_twitter}" target="_blank">𝕏 @${profile.social_twitter}</a>`;
-        if (profile?.social_instagram) socialsHTML += `<a class="social-link" href="https://instagram.com/${profile.social_instagram}" target="_blank">📷 @${profile.social_instagram}</a>`;
-        if (profile?.social_youtube) socialsHTML += `<a class="social-link" href="https://youtube.com/${profile.social_youtube}" target="_blank">▶ ${profile.social_youtube}</a>`;
+        if (profile?.social_twitter) socialsHTML += `<a href="https://twitter.com/${profile.social_twitter}" target="_blank">𝕏 @${profile.social_twitter}</a>`;
+        if (profile?.social_instagram) socialsHTML += `<a href="https://instagram.com/${profile.social_instagram}" target="_blank">📷 @${profile.social_instagram}</a>`;
+        if (profile?.social_youtube) socialsHTML += `<a href="https://youtube.com/${profile.social_youtube}" target="_blank">▶ ${profile.social_youtube}</a>`;
         profileSocials.innerHTML = socialsHTML;
         
         if (currentUser && currentUser.name === authorName) {
-            editProfileBtn.style.display = 'block';
+            editProfileBtn.style.display = 'flex';
         } else {
             editProfileBtn.style.display = 'none';
         }
@@ -941,6 +1059,7 @@ function openEditProfileModal() {
     }
     
     editAvatarPreview.src = currentUserProfile.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.name) + '&background=E63946&color=fff&size=200';
+    editRoleTitle.value = currentUserProfile.role_title || '';
     editBio.value = currentUserProfile.bio || '';
     editTwitter.value = currentUserProfile.social_twitter || '';
     editInstagram.value = currentUserProfile.social_instagram || '';
@@ -970,8 +1089,9 @@ editProfileForm?.addEventListener('submit', async (e) => {
     saveProfileBtn.disabled = true;
     saveProfileBtn.textContent = 'Guardando...';
     
-    const updates = {
+        const updates = {
         bio: editBio.value.trim(),
+        role_title: editRoleTitle.value.trim() || null,
         social_twitter: editTwitter.value.trim() || null,
         social_instagram: editInstagram.value.trim() || null,
         social_youtube: editYoutube.value.trim() || null,
@@ -1401,7 +1521,17 @@ function openEditArticle(article) {
     document.getElementById('artTitle').value = article.title;
     artSummary.value = article.summary || '';
     document.getElementById('artCategory').value = article.category;
-    document.getElementById('artAuthor').value = article.author;
+    // Seleccionar autor (con fallback si no está en la lista)
+    const authorSelect = document.getElementById('artAuthor');
+        if (authorSelect.querySelector(`option[value="${article.author}"]`)) {
+        authorSelect.value = article.author;
+    } else {
+        const tempOpt = document.createElement('option');
+        tempOpt.value = article.author;
+        tempOpt.textContent = article.author;
+        authorSelect.appendChild(tempOpt);
+        authorSelect.value = article.author;
+    }
     artImage.value = article.image || '';
     artVideo.value = article.video_url || '';
     editingArticleId = article.id;
@@ -1603,13 +1733,12 @@ closeWelcome.addEventListener('click', () => welcomeBanner.classList.remove('act
 welcomeProfile.addEventListener('click', () => { showAuthorProfile(currentUser.name); welcomeBanner.classList.remove('active'); });
 welcomeMyArticles.addEventListener('click', () => { renderMyArticles(); welcomeBanner.classList.remove('active'); });
 
-uploadBtn.addEventListener('click', () => {
+uploadBtn.addEventListener('click', async () => {
     if (!currentUser) {
         showToast('Debes iniciar sesión.', 'error', 'Acceso');
         openLoginModal(); return;
     }
     
-    // ⭐ Verificar autorización para publicar
     if (!currentUser.can_publish) {
         showToast(
             'Tu cuenta aún no ha sido autorizada para publicar. Contacta al administrador.',
@@ -1620,6 +1749,7 @@ uploadBtn.addEventListener('click', () => {
     }
     
     resetCMS();
+    await loadAuthors();
     uploadModal.classList.add('active');
     document.body.classList.add('modal-open');
 });
@@ -1910,8 +2040,23 @@ userAvatarMini.addEventListener('click', (e) => {
     if (currentUser) showLogoutConfirm();
 });
 
-closeProfile.addEventListener('click', () => { profileModal.classList.remove('active'); document.body.classList.remove('modal-open'); });
-profileModal.addEventListener('click', (e) => { if (e.target === profileModal) { profileModal.classList.remove('active'); document.body.classList.remove('modal-open'); } });
+closeProfile.addEventListener('click', () => {
+    profileModal.classList.remove('active');
+    setTimeout(() => {
+        const anyModalOpen = document.querySelector('.modal-overlay.active');
+        if (!anyModalOpen) document.body.classList.remove('modal-open');
+    }, 10);
+});
+
+profileModal.addEventListener('click', (e) => {
+    if (e.target === profileModal) {
+        profileModal.classList.remove('active');
+        setTimeout(() => {
+            const anyModalOpen = document.querySelector('.modal-overlay.active');
+            if (!anyModalOpen) document.body.classList.remove('modal-open');
+        }, 10);
+    }
+});
 
 editProfileBtn?.addEventListener('click', openEditProfileModal);
 closeEditProfile?.addEventListener('click', () => { editProfileModal.classList.remove('active'); document.body.classList.remove('modal-open'); });
@@ -1951,9 +2096,6 @@ confirmModal.addEventListener('click', (e) => {
 
 
 // ==========================================
-// 16. INICIALIZACIÓN
-// ==========================================
-document.addEventListener// ==========================================
 // CONFIRMACIÓN ESPECÍFICA PARA CERRAR SESIÓN
 // ==========================================
 function showLogoutConfirm() {
@@ -2005,7 +2147,48 @@ function showLogoutConfirm() {
 let galleryDB = [];
 let currentAlbum = null;
 let uploadedPhotoUrls = [];   // ⭐ ahora es un array
-
+// ==========================================
+// CARGAR LISTA DE AUTORES
+// ==========================================
+async function loadAuthors() {
+    const select = document.getElementById('artAuthor');
+    if (!select) return;
+    
+    try {
+        const { data: profiles, error } = await supabaseClient
+            .from('profiles')
+            .select('username')
+            .order('username', { ascending: true });
+        
+        if (error) {
+            console.error('Error cargando autores:', error);
+            select.innerHTML = '<option value="">Error al cargar autores</option>';
+            return;
+        }
+        
+        select.innerHTML = '<option value="">-- Selecciona un autor --</option>';
+        
+        if (profiles && profiles.length > 0) {
+            profiles.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.username;
+                opt.textContent = p.username;
+                select.appendChild(opt);
+            });
+        } else {
+            select.innerHTML = '<option value="">No hay autores disponibles</option>';
+        }
+        
+        if (currentUser && currentUser.name) {
+            select.value = currentUser.name;
+        }
+        
+        console.log('✅ Autores cargados:', profiles?.length || 0);
+    } catch (e) {
+        console.error('Error crítico cargando autores:', e);
+        select.innerHTML = '<option value="">Error inesperado</option>';
+    }
+}
 async function loadGallery() {
     try {
         const { data: photos, error } = await supabaseClient
@@ -2235,7 +2418,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     await loadState();
     await loadGallery();
+    await loadAuthors();
     updateAuthUI();
     renderSections();
     await checkUrlForArticle();
-})
+});

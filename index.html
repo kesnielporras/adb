@@ -479,85 +479,311 @@
             margin-top: 10px; margin-left: 10px;
         }
 
-        .profile-modal .modal-content { max-width: 700px; padding: 0; overflow: hidden; }
-        .profile-header {
-            background: linear-gradient(135deg, var(--bg-navy) 0%, var(--accent-red) 100%);
-            padding: 60px 40px 30px;
-            display: flex; align-items: flex-end; gap: 25px;
-            position: relative;
-        }
-        .profile-avatar {
-            width: 130px; height: 130px; border-radius: 50%;
-            object-fit: cover;
-            border: 5px solid var(--surface-white);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            background: white;
-            flex-shrink: 0;
-        }
-        .profile-info { color: white; padding-bottom: 10px; }
-        .profile-username {
-            font-family: var(--font-title); font-size: 32px;
-            text-transform: uppercase; letter-spacing: 1px;
-            margin-bottom: 5px; color: white;
-        }
-        .profile-stats {
-            display: flex; gap: 20px; margin-top: 10px;
-            font-size: 14px; opacity: 0.9;
-        }
-        .profile-stats strong { font-family: var(--font-title); }
-        .profile-body { padding: 30px 40px 40px; }
-        .profile-bio {
-            font-size: 15px; line-height: 1.7; color: #444;
-            margin-bottom: 25px; border-left: 3px solid var(--accent-red);
-            padding-left: 15px;
-        }
-        .profile-bio.empty { color: #999; font-style: italic; }
-        .profile-socials { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; }
-        .social-link {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 8px 16px; background: #f0f0f0;
-            border-radius: 50px; font-size: 13px; font-weight: 500;
-            color: #333; transition: all 0.2s;
-        }
-        .social-link:hover { background: var(--accent-red); color: white; }
-        .profile-section-title {
-            font-family: var(--font-title); font-size: 18px;
-            text-transform: uppercase; color: var(--accent-red);
-            border-bottom: 2px solid var(--accent-red);
-            padding-bottom: 8px; margin-bottom: 20px;
-            display: inline-block;
-        }
-        .profile-content-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px; margin-top: 20px;
-        }
-        .profile-content-item {
-            background: #f9f9f9; border-radius: 8px; overflow: hidden;
-            cursor: pointer; transition: transform 0.2s;
-            border: 1px solid #eee;
-        }
-        .profile-content-item:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
-        .profile-content-item img {
-            width: 100%; height: 120px; object-fit: cover;
-        }
-        .profile-content-item .title {
-            padding: 10px 12px; font-size: 13px;
-            font-family: var(--font-title); font-weight: 600;
-            color: #1A1A1A; line-height: 1.3;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
+/* ============================================
+   AUTOR EN EL ARTÍCULO (dentro del modal de lectura)
+   ============================================ */
+.reading-author-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+}
 
-        .edit-profile-btn {
-            position: absolute; top: 15px; right: 15px;
-            background: rgba(255,255,255,0.2); border: 1px solid white;
-            color: white; padding: 8px 16px; border-radius: 4px;
-            font-family: var(--font-title); font-size: 12px;
-            text-transform: uppercase; letter-spacing: 1px;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .edit-profile-btn:hover { background: white; color: var(--accent-red); }
+.reading-author-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.3);
+    flex-shrink: 0;
+    background: #fff;
+}
+
+.reading-author-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.reading-author-name {
+    font-family: var(--font-title);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.reading-author-name:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.reading-author-date {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    font-family: var(--font-body);
+}
+
+/* ============================================
+   MODAL DE PERFIL - ESTILO GRADA
+   ============================================ */
+.profile-modal .modal-content {
+    max-width: 950px;
+    padding: 0;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+.profile-modal .modal-close {
+    color: #999;
+    top: 15px;
+    right: 20px;
+    z-index: 10;
+    font-size: 28px;
+}
+
+.profile-header-grada {
+    background: #ececec;
+    padding: 35px 40px;
+    display: grid;
+    grid-template-columns: 130px 1fr 2fr;
+    gap: 30px;
+    align-items: center;
+    position: relative;
+    border-bottom: 1px solid #ddd;
+}
+
+.profile-avatar-grada {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    background: #fff;
+}
+
+.profile-header-center {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile-name-grada {
+    font-family: var(--font-title);
+    font-size: 32px;
+    font-weight: 700;
+    color: #1A1A1A;
+    text-transform: none;
+    letter-spacing: 0;
+    margin: 0;
+    line-height: 1.1;
+}
+
+.profile-role-grada {
+    font-family: var(--font-title);
+    font-size: 14px;
+    color: var(--accent-red);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.profile-socials-grada {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.profile-socials-grada a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #333;
+    text-decoration: none;
+    font-family: var(--font-body);
+    transition: color 0.2s;
+    width: fit-content;
+}
+
+.profile-socials-grada a:hover {
+    color: var(--accent-red);
+}
+
+.profile-header-right {
+    padding-left: 20px;
+}
+
+.profile-bio-grada {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #444;
+    font-family: var(--font-body);
+}
+
+.profile-bio-grada.empty {
+    color: #999;
+    font-style: italic;
+}
+
+.edit-profile-btn-grada {
+    position: absolute;
+    top: 20px;
+    right: 60px;
+    background: transparent;
+    border: none;
+    color: #666;
+    padding: 6px 10px;
+    font-family: var(--font-title);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 10;
+}
+
+.edit-profile-btn-grada:hover {
+    color: var(--accent-red);
+    text-decoration: underline;
+}
+
+/* Barra de estadísticas */
+.profile-stats-bar {
+    background: white;
+    padding: 15px 40px;
+    display: flex;
+    gap: 30px;
+    font-size: 13px;
+    color: #666;
+    font-family: var(--font-title);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.profile-stats-bar strong {
+    color: var(--accent-red);
+    font-size: 16px;
+    margin-right: 4px;
+}
+
+/* Cuerpo del perfil */
+.profile-body-grada {
+    background: #f5f5f5;
+    padding: 30px 40px 40px;
+    max-height: 65vh;
+    overflow-y: auto;
+}
+
+.profile-section-title {
+    font-family: var(--font-title);
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #1A1A1A;
+    letter-spacing: 1px;
+    border-bottom: 3px solid var(--accent-red);
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+    display: inline-block;
+    margin-top: 25px;
+}
+
+.profile-section-title:first-child {
+    margin-top: 0;
+}
+
+.profile-content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 5px;
+}
+
+.profile-content-item {
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e0e0e0;
+}
+
+.profile-content-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+.profile-content-item img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+.profile-content-item .title {
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: var(--font-title);
+    font-weight: 600;
+    color: #1A1A1A;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .profile-header-grada {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 20px;
+        padding: 25px 20px;
+    }
+    .profile-avatar-grada {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+    }
+    .profile-header-center {
+        align-items: center;
+    }
+    .profile-socials-grada {
+        align-items: center;
+    }
+    .profile-header-right {
+        padding-left: 0;
+    }
+    .profile-name-grada {
+        font-size: 24px;
+    }
+    .profile-stats-bar {
+        padding: 15px 20px;
+        gap: 15px;
+        font-size: 11px;
+    }
+    .profile-body-grada {
+        padding: 20px;
+    }
+    .edit-profile-btn-grada {
+        top: 15px;
+        right: 50px;
+        font-size: 11px;
+    }
+}
 
         .avatar-upload-area {
             display: flex; flex-direction: column; align-items: center;
@@ -1454,6 +1680,152 @@ main {
         font-size: 18px;
     }
 }
+
+/* ============================================
+   LAS VOCES DE ADB - Bloque destacado
+   ============================================ */
+.voces-section {
+    margin-bottom: 60px;
+    padding-bottom: 40px;
+    border-bottom: 3px solid var(--accent-red);
+}
+
+.voces-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--accent-red);
+}
+
+.voces-title {
+    font-family: var(--font-title);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--surface-white);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.voces-scroll {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 15px;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-red) transparent;
+}
+
+.voces-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.voces-scroll::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+}
+
+.voces-scroll::-webkit-scrollbar-thumb {
+    background: var(--accent-red);
+    border-radius: 3px;
+}
+
+/* Tarjeta horizontal */
+.voces-card {
+    display: flex;
+    flex-direction: row;
+    background: var(--card-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    min-width: 420px;
+    max-width: 420px;
+    flex-shrink: 0;
+    height: 180px;
+    position: relative;
+}
+
+.voces-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.35);
+}
+
+.voces-card-img {
+    width: 180px;
+    height: 100%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #ddd;
+}
+
+.voces-card-body {
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    min-width: 0;
+}
+
+.voces-card-author {
+    font-family: var(--font-title);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.voces-card-title {
+    font-family: var(--font-title);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--card-text);
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.voces-card-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    margin-top: 8px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .voces-section {
+        margin-bottom: 40px;
+        padding-bottom: 30px;
+    }
+    .voces-title {
+        font-size: 22px;
+    }
+    .voces-card {
+        min-width: 320px;
+        max-width: 320px;
+        height: 150px;
+    }
+    .voces-card-img {
+        width: 130px;
+    }
+    .voces-card-title {
+        font-size: 15px;
+    }
+    .voces-card-body {
+        padding: 14px 15px;
+    }
+}
     </style>
 </head>
 <body>
@@ -1632,16 +2004,19 @@ main {
             <span>☰</span> SECCIONES
         </button>
         <ul class="category-bar-list" id="categoryList">
-            <li><a href="#" class="active" data-category="all">Todos los temas <span class="cat-count" id="count-all">0</span></a></li>
-            <li><a href="#" data-category="futbol">Fútbol <span class="cat-count" id="count-futbol">0</span></a></li>
-            <li><a href="#" data-category="basquetbol">Básquetbol <span class="cat-count" id="count-basquetbol">0</span></a></li>
-            <li><a href="#" data-category="beisbol">Béisbol <span class="cat-count" id="count-beisbol">0</span></a></li>
-            <li><a href="#" data-category="boxeo">Boxeo <span class="cat-count" id="count-boxeo">0</span></a></li>
-            <li><a href="#" data-category="futbol-americano">Fútbol Americano <span class="cat-count" id="count-futbol-americano">0</span></a></li>
-            <li><a href="#" data-category="tenis">Tenis <span class="cat-count" id="count-tenis">0</span></a></li>
-            <li><a href="#" data-category="atletismo">Atletismo <span class="cat-count" id="count-atletismo">0</span></a></li>
-            <li><a href="#" data-category="otros">Otros Deportes <span class="cat-count" id="count-otros">0</span></a></li>
-        </ul>
+    <li><a href="#" class="active" data-category="all">Todos los temas <span class="cat-count" id="count-all">0</span></a></li>
+    <li><a href="#" data-category="entrevistas">Entrevistas <span class="cat-count" id="count-entrevistas">0</span></a></li>
+    <li><a href="#" data-category="opinion">Opinión <span class="cat-count" id="count-opinion">0</span></a></li>
+    <li><a href="#" data-category="futbol">Fútbol <span class="cat-count" id="count-futbol">0</span></a></li>
+    <li><a href="#" data-category="basquetbol">Básquetbol <span class="cat-count" id="count-basquetbol">0</span></a></li>
+    <li><a href="#" data-category="beisbol">Béisbol <span class="cat-count" id="count-beisbol">0</span></a></li>
+    <li><a href="#" data-category="boxeo">Boxeo <span class="cat-count" id="count-boxeo">0</span></a></li>
+    <li><a href="#" data-category="futbol-americano">Fútbol Americano <span class="cat-count" id="count-futbol-americano">0</span></a></li>
+    <li><a href="#" data-category="tenis">Tenis <span class="cat-count" id="count-tenis">0</span></a></li>
+    <li><a href="#" data-category="atletismo">Atletismo <span class="cat-count" id="count-atletismo">0</span></a></li>
+    <li><a href="#" data-category="otros">Otros Deportes <span class="cat-count" id="count-otros">0
+</span></a></li>
+</ul>
     </div>
 </nav>
 
@@ -1758,19 +2133,23 @@ main {
 </div>
                 
                 <label for="artCategory">Categoría *</label>
-                <select id="artCategory" required>
-                    <option value="futbol">Fútbol</option>
-                    <option value="basquetbol">Básquetbol</option>
-                    <option value="beisbol">Béisbol</option>
-                    <option value="boxeo">Boxeo</option>
-                    <option value="futbol-americano">Fútbol Americano</option>
-                    <option value="tenis">Tenis</option>
-                    <option value="atletismo">Atletismo</option>
-                    <option value="otros">Otros Deportes</option>
-                </select>
+<select id="artCategory" required>
+    <option value="entrevistas">Entrevistas</option>
+    <option value="opinion">Opinión</option>
+    <option value="futbol">Fútbol</option>
+    <option value="basquetbol">Básquetbol</option>
+    <option value="beisbol">Béisbol</option>
+    <option value="boxeo">Boxeo</option>
+    <option value="futbol-americano">Fútbol Americano</option>
+    <option value="tenis">Tenis</option>
+    <option value="atletismo">Atletismo</option>
+    <option value="otros">Otros Deportes</option>
+</select>
                 
                 <label for="artAuthor">Autor *</label>
-                <input type="text" id="artAuthor" placeholder="Tu nombre" required>
+<select id="artAuthor" required>
+    <option value="">-- Cargando autores... --</option>
+</select>
                 
                 <!-- Descripción simple para VIDEOS (oculta por defecto) -->
 <div id="videoDescriptionSection" style="display:none;">
@@ -1832,48 +2211,61 @@ main {
     </div>
 
     <div class="modal-overlay profile-modal" id="profileModal">
-        <div class="modal-content">
-            <button class="modal-close" id="closeProfile" style="color:white;z-index:10;">&times;</button>
-            <div class="profile-header">
-                <img id="profileAvatar" class="profile-avatar" src="" alt="">
-                <div class="profile-info">
-                    <div class="profile-username" id="profileUsername">Nombre</div>
-                                        <div class="profile-stats">
-                        <span><strong id="profileArticleCount">0</strong> artículos</span>
-                        <span><strong id="profileVideoCount">0</strong> videos</span>
-                        <span><strong id="profilePhotoCount">0</strong> fotos</span>
-                    </div>
-                </div>
-                <button class="edit-profile-btn" id="editProfileBtn" style="display:none;">✎ Editar perfil</button>
+    <div class="modal-content">
+        <button class="modal-close" id="closeProfile">&times;</button>
+        <button class="edit-profile-btn-grada" id="editProfileBtn" style="display:none;">✎ Editar perfil</button>
+        
+        <!-- ⭐ CABECERA TIPO GRADA -->
+        <div class="profile-header-grada">
+            <div class="profile-header-left">
+                <img id="profileAvatar" class="profile-avatar-grada" src="" alt="">
             </div>
-            <div class="profile-body">
-                <div class="profile-bio" id="profileBio">Sin biografía aún.</div>
-                <div class="profile-socials" id="profileSocials"></div>
-                
-                                <div class="profile-section-title">📰 Artículos</div>
-                <div id="profileArticlesContainer"></div>
-                
-                <div class="profile-section-title" style="margin-top:30px;">🎬 Videos</div>
-                <div id="profileVideosContainer"></div>
-                
-                <div class="profile-section-title" style="margin-top:30px;">📸 Fotos</div>
-                <div id="profilePhotosContainer"></div>
+            <div class="profile-header-center">
+                <h2 class="profile-name-grada" id="profileUsername">Nombre</h2>
+                <div class="profile-role-grada" id="profileRole">Colaborador</div>
+                <div class="profile-socials-grada" id="profileSocials"></div>
+            </div>
+            <div class="profile-header-right">
+                <div class="profile-bio-grada" id="profileBio">Sin biografía aún.</div>
             </div>
         </div>
+        
+        <!-- ⭐ STATS -->
+        <div class="profile-stats-bar">
+            <span><strong id="profileArticleCount">0</strong> artículos</span>
+            <span><strong id="profileVideoCount">0</strong> videos</span>
+            <span><strong id="profilePhotoCount">0</strong> fotos</span>
+        </div>
+        
+        <!-- ⭐ CONTENIDO -->
+        <div class="profile-body-grada">
+            <div class="profile-section-title">📰 Artículos</div>
+            <div id="profileArticlesContainer"></div>
+            
+            <div class="profile-section-title">🎬 Videos</div>
+            <div id="profileVideosContainer"></div>
+            
+            <div class="profile-section-title">📸 Fotos</div>
+            <div id="profilePhotosContainer"></div>
+        </div>
     </div>
+</div>
 
     <div class="modal-overlay" id="editProfileModal">
         <div class="modal-content">
             <button class="modal-close" id="closeEditProfile">&times;</button>
             <h2>Editar mi perfil</h2>
             <form id="editProfileForm">
-                <div class="avatar-upload-area">
-                    <img id="editAvatarPreview" class="avatar-preview" src="" alt="">
-                    <input type="file" id="editAvatarFile" accept="image/*" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white; width: 100%;">
-                </div>
-                
-                <label for="editBio">Biografía</label>
-                <textarea id="editBio" placeholder="Cuéntanos sobre ti..." maxlength="300"></textarea>
+    <div class="avatar-upload-area">
+        <img id="editAvatarPreview" class="avatar-preview" src="" alt="">
+        <input type="file" id="editAvatarFile" accept="image/*" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white; width: 100%;">
+    </div>
+    
+    <label for="editRoleTitle">Cargo / Rol (ej. "Periodista", "Fotógrafo")</label>
+    <input type="text" id="editRoleTitle" placeholder="ej. Periodista deportivo" maxlength="60">
+    
+    <label for="editBio">Biografía</label>
+    <textarea id="editBio" placeholder="Cuéntanos sobre ti..." maxlength="300"></textarea>
                 
                 <label for="editTwitter">Twitter / X (usuario sin @)</label>
                 <input type="text" id="editTwitter" placeholder="ej. asidebolas">
