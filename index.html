@@ -1826,6 +1826,593 @@ main {
         padding: 14px 15px;
     }
 }
+
+/* ============================================ */
+/* PANEL DE ADMINISTRADOR */
+/* ============================================ */
+.btn-admin {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    color: white !important;
+    border: none;
+    padding: 9px 16px;
+    font-family: var(--font-title);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.btn-admin:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.admin-modal .admin-content {
+    max-width: 1200px;
+    width: 95%;
+    padding: 0;
+    background: var(--bg-navy);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.admin-header {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    padding: 25px 40px;
+    color: white;
+}
+.admin-header h2 {
+    font-family: var(--font-title);
+    font-size: 28px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 5px 0;
+    color: white;
+}
+.admin-header p {
+    font-size: 13px;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.admin-tabs {
+    display: flex;
+    background: var(--bg-navy-light);
+    border-bottom: 1px solid var(--border-light);
+}
+.admin-tab {
+    flex: 1;
+    padding: 16px 20px;
+    background: transparent;
+    border: none;
+    font-family: var(--font-title);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--surface-white);
+    opacity: 0.6;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
+}
+.admin-tab:hover { opacity: 1; }
+.admin-tab.active {
+    opacity: 1;
+    border-bottom-color: #F59E0B;
+    color: #F59E0B;
+}
+
+.admin-body {
+    padding: 25px 30px;
+    overflow-y: auto;
+    flex: 1;
+    background: #f5f5f5;
+}
+
+.admin-filters {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.admin-search {
+    flex: 1;
+    min-width: 200px;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    background: white;
+}
+.admin-select {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+}
+
+.admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-item {
+    background: white;
+    border-radius: 8px;
+    padding: 15px 20px;
+    display: grid;
+    grid-template-columns: 60px 1fr auto auto;
+    gap: 15px;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    border-left: 4px solid #ddd;
+    transition: box-shadow 0.2s;
+}
+.admin-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+.admin-item.type-article { border-left-color: #3498db; }
+.admin-item.type-video { border-left-color: #9b59b6; }
+.admin-item.type-photo { border-left-color: #2ecc71; }
+
+.admin-item-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: #eee;
+}
+
+.admin-item-info {
+    min-width: 0;
+}
+.admin-item-title {
+    font-family: var(--font-title);
+    font-size: 15px;
+    font-weight: 600;
+    color: #1A1A1A;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.admin-item-meta {
+    font-size: 12px;
+    color: #666;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.admin-item-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.badge-article { background: #dbeafe; color: #1e40af; }
+.badge-video { background: #ede9fe; color: #6d28d9; }
+.badge-photo { background: #d1fae5; color: #065f46; }
+
+.admin-item-actions {
+    display: flex;
+    gap: 6px;
+}
+.admin-btn-sm {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    font-family: var(--font-title);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.admin-btn-edit {
+    background: #3498db;
+    color: white;
+}
+.admin-btn-edit:hover { background: #2980b9; }
+.admin-btn-delete {
+    background: #e74c3c;
+    color: white;
+}
+.admin-btn-delete:hover { background: #c0392b; }
+.admin-btn-view {
+    background: #95a5a6;
+    color: white;
+}
+.admin-btn-view:hover { background: #7f8c8d; }
+
+/* USUARIOS */
+.user-item {
+    background: white;
+    border-radius: 8px;
+    padding: 15px 20px;
+    display: grid;
+    grid-template-columns: 50px 1fr auto auto;
+    gap: 15px;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    border-left: 4px solid #ddd;
+}
+.user-item.role-admin { border-left-color: #F59E0B; }
+.user-item.role-editor { border-left-color: #3498db; }
+
+.user-item-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #eee;
+}
+.user-item-info { min-width: 0; }
+.user-item-name {
+    font-family: var(--font-title);
+    font-size: 16px;
+    font-weight: 600;
+    color: #1A1A1A;
+    margin-bottom: 2px;
+}
+.user-item-email {
+    font-size: 12px;
+    color: #666;
+}
+
+.user-role-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: var(--font-title);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.role-badge-reader { background: #e5e7eb; color: #4b5563; }
+.role-badge-editor { background: #dbeafe; color: #1e40af; }
+.role-badge-admin { background: #fef3c7; color: #92400e; }
+
+.user-publish-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-family: var(--font-title);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+    font-weight: 600;
+}
+.toggle-switch {
+    position: relative;
+    width: 42px;
+    height: 22px;
+    background: #ccc;
+    border-radius: 22px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.toggle-switch.active { background: #2ecc71; }
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.toggle-switch.active::after { transform: translateX(20px); }
+
+.admin-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    font-style: italic;
+}
+
+@media (max-width: 900px) {
+    .admin-item, .user-item {
+        grid-template-columns: 50px 1fr;
+        gap: 10px;
+    }
+    .admin-item-actions, .user-item-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+    .admin-header { padding: 20px; }
+    .admin-header h2 { font-size: 20px; }
+    .admin-body { padding: 15px; }
+}
+
+/* ============================================ */
+/* MODO ADMIN EDITANDO PERFIL DE OTRO USUARIO */
+/* ============================================ */
+.admin-editing-banner {
+    background: #FEF3C7;
+    border-left: 4px solid #F59E0B;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 18px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: #92400E;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.admin-editing-banner strong {
+    font-family: var(--font-title);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-edit-section {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px dashed #ddd;
+}
+.admin-edit-section h3 {
+    font-family: var(--font-title);
+    font-size: 14px;
+    text-transform: uppercase;
+    color: var(--accent-red);
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+}
+.admin-edit-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: end;
+}
+.admin-edit-row label {
+    font-weight: 600;
+    font-size: 12px;
+}
+.admin-edit-row select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: var(--font-body);
+    background: white;
+}
+
+/* Botón "Editar perfil" en la lista de usuarios */
+.admin-btn-profile {
+    background: #F59E0B;
+    color: white;
+}
+.admin-btn-profile:hover { background: #D97706; }
+/* ============================================ */
+/* MODAL DE RECORTE DE IMAGEN (CROPPER.JS) */
+/* ============================================ */
+/* FORZAR cropper por encima de TODO */
+#cropperModal,
+#cropperModal.active {
+    z-index: 2147483647 !important;
+    background: #000000 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+}
+
+/* ⭐ Cropper.js usa la clase .cropper-modal para su overlay interno.
+   La matamos para que NO se pinte encima de la imagen. */
+.cropper-modal .cropper-content {
+    z-index: 2147483647 !important;
+    position: relative;
+    margin: auto;
+}
+
+/* ⭐ Ocultar navbar, categorías, tabs y banner cuando el cropper está abierto */
+body.cropper-open header,
+body.cropper-open .category-bar,
+body.cropper-open .content-tabs,
+body.cropper-open .welcome-banner,
+body.cropper-open .hero,
+body.cropper-open .container {
+    display: none !important;
+}
+
+.cropper-modal .cropper-content {
+    max-width: 900px;
+    width: 95%;
+    padding: 0;
+    background: #1a1a1a;
+    overflow: hidden;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    max-height: 95vh;
+}
+
+.cropper-header {
+    background: linear-gradient(135deg, var(--bg-navy) 0%, var(--accent-red) 100%);
+    padding: 20px 30px;
+    color: white;
+}
+.cropper-header h2 {
+    font-family: var(--font-title);
+    font-size: 22px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 4px 0;
+    color: white;
+}
+.cropper-header p {
+    font-size: 13px;
+    opacity: 0.9;
+    margin: 0;
+    color: rgba(255,255,255,0.85);
+}
+
+.cropper-body {
+    flex: 1;
+     background: #1a1a1a;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    max-height: 55vh;
+    position: relative;
+}
+
+.cropper-body img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+}
+
+/* Cropper.js overrides para que se vea bien con nuestra paleta */
+.cropper-view-box,
+.cropper-face {
+    border-radius: 50%; /* ← para avatar se ve redondo, para portada quitaremos esto por JS */
+}
+.cropper-modal.portrait-mode .cropper-view-box,
+.cropper-modal.portrait-mode .cropper-face {
+    border-radius: 0;
+}
+.cropper-view-box {
+    outline: 2px solid var(--accent-red);
+    outline-color: var(--accent-red);
+}
+.cropper-line {
+    background-color: var(--accent-red);
+}
+.cropper-point {
+    background-color: var(--accent-red);
+    width: 8px;
+    height: 8px;
+}
+
+.cropper-controls {
+    background: #222;
+    padding: 15px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-top: 1px solid #333;
+}
+
+.cropper-control-group {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cropper-zoom-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-size: 13px;
+    justify-content: center;
+}
+
+.cropper-zoom-group input[type="range"] {
+    flex: 1;
+    max-width: 400px;
+    accent-color: var(--accent-red);
+}
+
+.cropper-btn {
+    background: #333;
+    color: white;
+    border: 1px solid #444;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+    min-width: 42px;
+    font-family: var(--font-body);
+}
+.cropper-btn:hover {
+    background: var(--accent-red);
+    border-color: var(--accent-red);
+    transform: translateY(-1px);
+}
+
+.cropper-actions {
+    display: flex;
+    gap: 10px;
+    padding: 15px 30px 20px;
+    background: #222;
+    border-top: 1px solid #333;
+}
+.cropper-btn-cancel,
+.cropper-btn-apply {
+    flex: 1;
+    padding: 12px;
+    border-radius: 6px;
+    border: none;
+    font-family: var(--font-title);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.cropper-btn-cancel {
+    background: #444;
+    color: white;
+}
+.cropper-btn-cancel:hover { background: #555; }
+.cropper-btn-apply {
+    background: var(--accent-red);
+    color: white;
+}
+.cropper-btn-apply:hover {
+    background: var(--accent-red-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
+}
+
+@media (max-width: 900px) {
+    .cropper-modal .cropper-content {
+        width: 100%;
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    .cropper-body {
+        min-height: 300px;
+        max-height: 50vh;
+    }
+    .cropper-header { padding: 15px 20px; }
+    .cropper-header h2 { font-size: 18px; }
+    .cropper-controls, .cropper-actions { padding: 12px 20px; }
+    .cropper-btn { padding: 6px 10px; font-size: 14px; }
+}
     </style>
 </head>
 <body>
@@ -1985,7 +2572,8 @@ main {
             <nav class="nav-links">
                 <a id="exploreBtn">Explorar</a>
                 <a id="libraryBtn">Mi biblioteca</a>
-                <a id="myArticlesBtn">Mis publicaciones</a>
+                                <a id="myArticlesBtn">Mis publicaciones</a>
+                <button class="btn-admin" id="adminPanelBtn" style="display:none;">⚙️ Admin</button>
                 <button class="btn-theme" id="themeToggle" title="Cambiar tema">🌙</button>
                 <button class="btn-upload" id="uploadBtn">Publicar</button>
                 <button class="btn-login" id="loginBtn">Iniciar Sesión</button>
@@ -2101,8 +2689,12 @@ main {
     <div id="imagePreviewContainer" style="display: none; margin-bottom: 15px;">
         <img id="imagePreview" style="max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
     </div>
-    <label for="artImage">O pega una URL de imagen (opcional)</label>
+        <label for="artImage">O pega una URL de imagen (opcional)</label>
     <input type="url" id="artImage" placeholder="https://ejemplo.com/imagen.jpg">
+    
+    <!-- ⭐ NUEVO: Pie de foto de la portada del artículo -->
+    <label for="artImageCaption" style="margin-top:10px;">Pie de foto de la portada (opcional)</label>
+    <input type="text" id="artImageCaption" placeholder="ej. Messi celebrando el gol de la victoria" maxlength="200">
 </div>
                 
                 <div id="videoSection" style="display:none;">
@@ -2127,6 +2719,11 @@ main {
     </div>
     <div id="photoPreviewContainer" style="display: none; margin-bottom: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;">
         <!-- Aquí se inyectarán las miniaturas -->
+    </div>
+    <!-- ⭐ NUEVO: Pies de foto individuales para la galería -->
+    <div id="photoCaptionsContainer" style="display:none; margin-bottom: 15px;">
+        <label style="display:block; margin-bottom:8px;">Pie de foto por imagen (opcional)</label>
+        <div id="photoCaptionsList"></div>
     </div>
     <label for="artPhoto">O pega una URL de imagen (opcional, para 1 sola foto)</label>
     <input type="url" id="artPhoto" placeholder="https://ejemplo.com/foto.jpg">
@@ -2256,6 +2853,9 @@ main {
             <button class="modal-close" id="closeEditProfile">&times;</button>
             <h2>Editar mi perfil</h2>
             <form id="editProfileForm">
+    <div class="admin-editing-banner" id="adminEditingBanner" style="display:none;">
+        ✏️ <span>Estás editando el perfil de <strong id="adminEditingName">usuario</strong>. Los cambios se aplicarán a su cuenta.</span>
+    </div>
     <div class="avatar-upload-area">
         <img id="editAvatarPreview" class="avatar-preview" src="" alt="">
         <input type="file" id="editAvatarFile" accept="image/*" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white; width: 100%;">
@@ -2275,7 +2875,31 @@ main {
                 
                 <label for="editYoutube">YouTube (canal o URL)</label>
                 <input type="text" id="editYoutube" placeholder="ej. @asidebolas">
-                
+                <div class="admin-edit-section" id="adminAdvancedSection" style="display:none;">
+        <h3>⚙️ Opciones de administrador</h3>
+        
+        <label for="editUsernameAdmin">Nombre de usuario</label>
+        <input type="text" id="editUsernameAdmin" placeholder="username" maxlength="30">
+        
+        <div class="admin-edit-row" style="margin-top: 15px;">
+            <div>
+                <label for="editRoleAdmin">Rol</label>
+                <select id="editRoleAdmin">
+                    <option value="reader">Lector</option>
+                    <option value="editor">Editor</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div>
+                <label for="editCanPublishAdmin">Permiso para publicar</label>
+                <select id="editCanPublishAdmin">
+                    <option value="false">No puede publicar</option>
+                    <option value="true">Sí puede publicar</option>
+                </select>
+            </div>
+        </div>
+    </div>    
+
                 <button type="submit" id="saveProfileBtn">Guardar cambios</button>
             </form>
         </div>
@@ -2293,6 +2917,80 @@ main {
         </div>
     </div>
 
+<!-- ========================================== -->
+<!-- PANEL DE ADMINISTRADOR -->
+<!-- ========================================== -->
+<div class="modal-overlay admin-modal" id="adminPanelModal">
+    <div class="modal-content admin-content">
+        <button class="modal-close" id="closeAdminPanel" style="color:white;z-index:10;">&times;</button>
+        
+        <div class="admin-header">
+            <h2>⚙️ Panel de Administración</h2>
+            <p>Control total sobre el contenido y usuarios</p>
+        </div>
+
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-admin-tab="content">📝 Contenido</button>
+            <button class="admin-tab" data-admin-tab="users">👥 Usuarios</button>
+        </div>
+
+        <div class="admin-body">
+            <!-- PESTAÑA CONTENIDO -->
+            <div class="admin-tab-content" id="adminTabContent" style="display:block;">
+                <div class="admin-filters">
+                    <input type="text" id="adminSearchContent" placeholder="🔍 Buscar por título o autor..." class="admin-search">
+                    <select id="adminFilterType" class="admin-select">
+                        <option value="all">Todo el contenido</option>
+                        <option value="article">Solo artículos</option>
+                        <option value="video">Solo videos</option>
+                        <option value="photo">Solo fotos</option>
+                    </select>
+                </div>
+                <div id="adminContentList" class="admin-list"></div>
+            </div>
+
+            <!-- PESTAÑA USUARIOS -->
+            <div class="admin-tab-content" id="adminTabUsers" style="display:none;">
+                <div class="admin-filters">
+                    <input type="text" id="adminSearchUsers" placeholder="🔍 Buscar por nombre o email..." class="admin-search">
+                </div>
+                <div id="adminUsersList" class="admin-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ========================================== -->
+<!-- MODAL DE RECORTE DE IMAGEN -->
+<!-- ========================================== -->
+<div class="modal-overlay cropper-modal" id="cropperModal">
+    <div class="modal-content cropper-content">
+        <div class="cropper-header">
+            <h2 id="cropperTitle">Ajustar imagen</h2>
+            <p id="cropperSubtitle">Mueve, acerca y ajusta el encuadre</p>
+        </div>
+        <div class="cropper-body">
+            <img id="cropperImage" src="" alt="">
+        </div>
+        <div class="cropper-controls">
+            <div class="cropper-control-group">
+                <button type="button" class="cropper-btn" id="cropperRotateLeft" title="Rotar izquierda">↺</button>
+                <button type="button" class="cropper-btn" id="cropperRotateRight" title="Rotar derecha">↻</button>
+                <button type="button" class="cropper-btn" id="cropperFlipH" title="Espejo horizontal">⇋</button>
+                <button type="button" class="cropper-btn" id="cropperFlipV" title="Espejo vertical">⇵</button>
+                <button type="button" class="cropper-btn" id="cropperReset" title="Resetear">⟲</button>
+            </div>
+            <div class="cropper-zoom-group">
+                <span>🔍−</span>
+                <input type="range" id="cropperZoom" min="0.1" max="3" step="0.01" value="1">
+                <span>🔍+</span>
+            </div>
+        </div>
+        <div class="cropper-actions">
+            <button type="button" class="cropper-btn-cancel" id="cropperCancel">Cancelar</button>
+            <button type="button" class="cropper-btn-apply" id="cropperApply">✓ Aplicar recorte</button>
+        </div>
+    </div>
+</div>
     <div class="toast-container" id="toastContainer"></div>
 <!-- MODAL DE ÁLBUM -->
 <div class="modal-overlay album-modal" id="albumModal">
@@ -2317,6 +3015,7 @@ main {
             <div class="photo-viewer-info">
                 <h3 id="photoViewerTitle">Título</h3>
                 <p id="photoViewerDescription">Descripción</p>
+                <p id="photoViewerCaption" style="font-style: italic; color: rgba(255,255,255,0.85); font-size: 13px; margin-top: -5px; border-left: 3px solid var(--accent-red); padding-left: 10px;"></p>
                 <div class="photo-viewer-meta">
                     <span id="photoViewerAuthor">Por Autor</span>
                     <span id="photoViewerCategory">Categoría</span>
@@ -2325,10 +3024,11 @@ main {
         </div>
     </div>
 </div>
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.tiny.cloud/1/80v7pd7nj1za3huesnrjeacsgoyuq66xnkuxghix5ac63k3c/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
     <script src="app.js"></script>
 <script>
     // Forzar carga después de que app.js esté listo

@@ -92,6 +92,7 @@ async function loadState() {
                 author: a.author,
                 author_id: a.author_id,
                 image: a.image,
+image_caption: a.image_caption,        // ⭐ NUEVO
                 video_url: a.video_url,
                 content_type: a.content_type || 'article',
                 pages: a.pages,
@@ -235,7 +236,13 @@ const editTwitter = document.getElementById('editTwitter');
 const editInstagram = document.getElementById('editInstagram');
 const editYoutube = document.getElementById('editYoutube');
 const saveProfileBtn = document.getElementById('saveProfileBtn');
-
+// Elementos exclusivos del modo admin-editando-perfil
+const adminEditingBanner = document.getElementById('adminEditingBanner');
+const adminEditingName = document.getElementById('adminEditingName');
+const adminAdvancedSection = document.getElementById('adminAdvancedSection');
+const editUsernameAdmin = document.getElementById('editUsernameAdmin');
+const editRoleAdmin = document.getElementById('editRoleAdmin');
+const editCanPublishAdmin = document.getElementById('editCanPublishAdmin');
 const confirmModal = document.getElementById('confirmModal');
 const confirmIcon = document.getElementById('confirmIcon');
 const confirmTitle = document.getElementById('confirmTitle');
@@ -244,6 +251,18 @@ const confirmCancel = document.getElementById('confirmCancel');
 const confirmOk = document.getElementById('confirmOk');
 
 const toastContainer = document.getElementById('toastContainer');
+// Admin Panel
+const adminPanelBtn = document.getElementById('adminPanelBtn');
+const adminPanelModal = document.getElementById('adminPanelModal');
+const closeAdminPanel = document.getElementById('closeAdminPanel');
+const adminTabBtns = document.querySelectorAll('.admin-tab');
+const adminTabContent = document.getElementById('adminTabContent');
+const adminTabUsers = document.getElementById('adminTabUsers');
+const adminContentList = document.getElementById('adminContentList');
+const adminUsersList = document.getElementById('adminUsersList');
+const adminSearchContent = document.getElementById('adminSearchContent');
+const adminFilterType = document.getElementById('adminFilterType');
+const adminSearchUsers = document.getElementById('adminSearchUsers');
 
 // ==========================================
 // 4. TOASTS Y CONFIRMACIÓN
@@ -277,6 +296,7 @@ function showConfirm(message, onConfirm, options = {}) {
     okBtn.textContent = options.confirmText || 'Confirmar';
     cancelBtn.textContent = options.cancelText || 'Cancelar';
     confirmModal.classList.add('active');
+
     document.body.classList.add('modal-open');
     
     const newOk = okBtn.cloneNode(true);
@@ -873,19 +893,24 @@ function openReadingModal(article) {
         showAuthorProfile(article.author);
     });    
     const newUrl = `${SITE_URL}?article=${article.id}`;
+try {
     window.history.pushState({ articleId: article.id }, '', newUrl);
+} catch (e) { /* ignorar en local (SecurityError de CORS) */ }
     
-    let contentHTML = '';
-    
-    // ⭐ Imagen de portada al inicio del artículo
+        let contentHTML = '';
+
+    // Imagen de portada al inicio del artículo (con pie de foto si existe)
     if (article.image) {
-        contentHTML += `
-            <div style="margin: -40px -40px 30px -40px;">
-                <img src="${article.image}" alt="${article.title}" style="width: 100%; height: auto; max-height: 400px; object-fit: cover; display: block; border-radius: 12px 12px 0 0;">
-            </div>
-        `;
+        var captionHTML = '';
+        if (article.image_caption) {
+            captionHTML = '<p style="font-style: italic; color: #555; font-size: 13px; padding: 10px 40px 0 40px; border-left: 3px solid #E63946; margin: 0 0 10px 40px;">' + article.image_caption + '</p>';
+        }
+        contentHTML += '<div style="margin: -40px -40px 30px -40px;">';
+        contentHTML += '<img src="' + article.image + '" alt="' + article.title + '" style="width: 100%; height: auto; max-height: 400px; object-fit: cover; display: block; border-radius: 12px 12px 0 0;">';
+        contentHTML += captionHTML;
+        contentHTML += '</div>';
     }
-    
+
     // ⭐ Video (si existe)
     if (article.video_url) {
         let videoHTML = '';
@@ -1052,35 +1077,72 @@ async function showAuthorProfile(authorName) {
 // ==========================================
 // 9. EDITAR PERFIL
 // ==========================================
-function openEditProfileModal() {
-    if (!currentUserProfile) {
-        showToast('No se encontró tu perfil.', 'error');
-        return;
+function openEditProfileModal(targetUserId = null) {
+    // ⭐ Blindaje: si nos llega un evento (por error), ignorarlo
+    if (targetUserId && typeof targetUserId !== 'string') {
+        console.warn('⚠️ openEditProfileModal recibió un valor raro, forzando modo propio');
+        targetUserId = null;
     }
     
-    editAvatarPreview.src = currentUserProfile.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.name) + '&background=E63946&color=fff&size=200';
-    editRoleTitle.value = currentUserProfile.role_title || '';
-    editBio.value = currentUserProfile.bio || '';
-    editTwitter.value = currentUserProfile.social_twitter || '';
-    editInstagram.value = currentUserProfile.social_instagram || '';
-    editYoutube.value = currentUserProfile.social_youtube || '';
-    uploadedAvatarUrl = currentUserProfile.avatar_url || null;
+    // targetUserId = null → editando mi propio perfil
+    // targetUserId = 'uuid' → admin editando a otro usuario
+    
+    if (targetUserId && targetUserId !== currentUser.id) {
+        // === MODO ADMIN ===
+        if (!isAdmin()) {
+            showToast('Solo los admins pueden editar otros perfiles.', 'error');
+            return;
+        }
+        adminEditingUserId = targetUserId;
+    } else {
+        // === MODO PROPIO ===
+        adminEditingUserId = null;
+    }
+    
+    // Cargar el perfil que vamos a editar
+    let profileToEdit;
+    
+    if (adminEditingUserId) {
+        // Buscar el perfil en la tabla (ya lo tenemos en memoria si venimos del panel)
+        profileToEdit = window._adminEditingProfileCache;
+        if (!profileToEdit) {
+            showToast('No se encontró el perfil.', 'error');
+            return;
+        }
+    } else {
+        profileToEdit = currentUserProfile;
+        if (!profileToEdit) {
+            showToast('No se encontró tu perfil.', 'error');
+            return;
+        }
+    }
+    
+    // Rellenar campos comunes
+    editAvatarPreview.src = profileToEdit.avatar_url 
+        || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(profileToEdit.username || 'U') + '&background=E63946&color=fff&size=200';
+    editRoleTitle.value = profileToEdit.role_title || '';
+    editBio.value = profileToEdit.bio || '';
+    editTwitter.value = profileToEdit.social_twitter || '';
+    editInstagram.value = profileToEdit.social_instagram || '';
+    editYoutube.value = profileToEdit.social_youtube || '';
+    uploadedAvatarUrl = profileToEdit.avatar_url || null;
+    
+    // Modo admin: mostrar sección avanzada + banner
+    if (adminEditingUserId) {
+        adminEditingBanner.style.display = 'flex';
+        adminEditingName.textContent = profileToEdit.username || 'usuario';
+        adminAdvancedSection.style.display = 'block';
+        editUsernameAdmin.value = profileToEdit.username || '';
+        editRoleAdmin.value = profileToEdit.role || 'reader';
+        editCanPublishAdmin.value = String(profileToEdit.can_publish === true);
+    } else {
+        adminEditingBanner.style.display = 'none';
+        adminAdvancedSection.style.display = 'none';
+    }
     
     editProfileModal.classList.add('active');
     document.body.classList.add('modal-open');
 }
-
-editAvatarFile?.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (event) => { editAvatarPreview.src = event.target.result; };
-    reader.readAsDataURL(file);
-    
-    const url = await uploadFileToSupabase(file, 'image', AVATAR_BUCKET);
-    if (url) uploadedAvatarUrl = url;
-});
 
 editProfileForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1089,8 +1151,12 @@ editProfileForm?.addEventListener('submit', async (e) => {
     saveProfileBtn.disabled = true;
     saveProfileBtn.textContent = 'Guardando...';
     
-        const updates = {
-        bio: editBio.value.trim(),
+    // Determinar a quién editamos
+    const targetId = adminEditingUserId || currentUser.id;
+    const isAdminEdit = !!adminEditingUserId;
+    
+    const updates = {
+        bio: editBio.value.trim() || null,
         role_title: editRoleTitle.value.trim() || null,
         social_twitter: editTwitter.value.trim() || null,
         social_instagram: editInstagram.value.trim() || null,
@@ -1098,8 +1164,24 @@ editProfileForm?.addEventListener('submit', async (e) => {
         avatar_url: uploadedAvatarUrl || null
     };
     
+    // En modo admin añadimos username, role y can_publish
+    if (isAdminEdit) {
+        const newUsername = editUsernameAdmin.value.trim();
+        if (!newUsername) {
+            showToast('El nombre de usuario no puede estar vacío.', 'error');
+            saveProfileBtn.disabled = false;
+            saveProfileBtn.textContent = 'Guardar cambios';
+            return;
+        }
+        updates.username = newUsername;
+        updates.role = editRoleAdmin.value;
+        updates.can_publish = editCanPublishAdmin.value === 'true';
+    }
+    
     const { error } = await supabaseClient
-        .from('profiles').update(updates).eq('id', currentUser.id);
+        .from('profiles')
+        .update(updates)
+        .eq('id', targetId);
     
     if (error) {
         showToast('Error al guardar: ' + error.message, 'error');
@@ -1108,15 +1190,27 @@ editProfileForm?.addEventListener('submit', async (e) => {
         return;
     }
     
-    currentUserProfile = { ...currentUserProfile, ...updates };
-    if (updates.avatar_url) {
-        currentUser.avatar_url = updates.avatar_url;
+    // Actualizar caché local
+    if (isAdminEdit) {
+        // Refrescar la lista de usuarios en el panel admin
+        if (adminUsersList && adminTabUsers.style.display !== 'none') {
+            await renderAdminUsers();
+        }
+        showToast('Perfil del usuario actualizado.', 'success', '¡Listo!');
+        adminEditingUserId = null;
+        window._adminEditingProfileCache = null;
+    } else {
+        currentUserProfile = { ...currentUserProfile, ...updates };
+        if (updates.avatar_url) {
+            currentUser.avatar_url = updates.avatar_url;
+        }
+        currentUser.name = updates.username || currentUser.name;
         updateAuthUI();
+        showToast('Perfil actualizado correctamente.', 'success', '¡Listo!');
     }
     
     editProfileModal.classList.remove('active');
     document.body.classList.remove('modal-open');
-    showToast('Perfil actualizado correctamente.', 'success', '¡Listo!');
     saveProfileBtn.disabled = false;
     saveProfileBtn.textContent = 'Guardar cambios';
 });
@@ -1199,8 +1293,21 @@ async function downloadPDF(article) {
                     yPos = 25;
                 }
                 
-                doc.addImage(img, 'JPEG', imgX, yPos, imgWidth, imgHeight);
-                yPos += imgHeight + 10;
+                                doc.addImage(img, 'JPEG', imgX, yPos, imgWidth, imgHeight);
+                yPos += imgHeight + 4;
+                
+                // ⭐ Pie de foto de portada en el PDF
+                if (article.image_caption) {
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'italic');
+                    doc.setTextColor(110, 110, 110);
+                    const captionLines = doc.splitTextToSize(article.image_caption, imgWidth - 10);
+                    captionLines.forEach(line => {
+                        doc.text(line, imgX + 5, yPos);
+                        yPos += 5;
+                    });
+                }
+                yPos += 6;
             }
         } catch (e) {
             console.error('Error cargando la imagen para el PDF:', e);
@@ -1496,8 +1603,9 @@ function resetCMS() {
     const videoDescInput = document.getElementById('artVideoDescription');
 if (videoDescInput) videoDescInput.value = '';
 
-    // ⭐ Limpiar fotos
+        // ⭐ Limpiar fotos
     uploadedPhotoUrls = [];
+    uploadedPhotoCaptions = [];
     const photoInput = document.getElementById('artPhotoFile');
     if (photoInput) photoInput.value = '';
     const photoPreviewContainer = document.getElementById('photoPreviewContainer');
@@ -1507,6 +1615,16 @@ if (videoDescInput) videoDescInput.value = '';
     }
     const artPhotoInput = document.getElementById('artPhoto');
     if (artPhotoInput) artPhotoInput.value = '';
+    
+    // ⭐ Limpiar pies de foto de galería
+    const captionsContainer = document.getElementById('photoCaptionsContainer');
+    const captionsList = document.getElementById('photoCaptionsList');
+    if (captionsContainer) captionsContainer.style.display = 'none';
+    if (captionsList) captionsList.innerHTML = '';
+
+    // ⭐ Limpiar pie de foto de portada
+    const artImageCaptionEl = document.getElementById('artImageCaption');
+    if (artImageCaptionEl) artImageCaptionEl.value = '';
 
     setTimeout(() => {
         initTinyMCE();
@@ -1547,6 +1665,9 @@ function openEditArticle(article) {
         }
         uploadedImageUrl = article.image;
     }
+    // ⭐ Rellenar pie de foto de portada
+    const artImageCaptionEl = document.getElementById('artImageCaption');
+    if (artImageCaptionEl) artImageCaptionEl.value = article.image_caption || '';
     
     if (article.video_url) uploadedVideoUrl = article.video_url;
     
@@ -1605,7 +1726,6 @@ function updateAuthUI() {
         welcomeName.textContent = currentUser.name;
         welcomeBanner.classList.add('active');
         
-        // ⭐ Ajustar el botón "Publicar" según autorización
         if (currentUser.can_publish) {
             uploadBtn.style.display = 'inline-block';
             uploadBtn.textContent = 'Publicar';
@@ -1617,16 +1737,22 @@ function updateAuthUI() {
             uploadBtn.style.opacity = '0.5';
             uploadBtn.style.cursor = 'not-allowed';
         }
+        
+        // ⭐ MOSTRAR BOTÓN ADMIN SI CORRESPONDE
+        if (adminPanelBtn) {
+            adminPanelBtn.style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        }
     } else {
         loginBtn.style.display = 'inline-block';
         userNameContainer.style.display = 'none';
         welcomeBanner.classList.remove('active');
         
-        // ⭐ Cuando no hay sesión, el botón Publicar se ve pero invita a iniciar sesión
         uploadBtn.style.display = 'inline-block';
         uploadBtn.textContent = 'Publicar';
         uploadBtn.style.opacity = '1';
         uploadBtn.style.cursor = 'pointer';
+        
+        if (adminPanelBtn) adminPanelBtn.style.display = 'none';
     }
 }
 
@@ -1688,6 +1814,10 @@ searchSuggestions.addEventListener('click', (e) => {
 });
 
 document.addEventListener('click', (e) => {
+    // No hacer nada si el cropper está abierto
+    const cropperModal = document.getElementById('cropperModal');
+    if (cropperModal && cropperModal.classList.contains('active')) return;
+    
     if (!e.target.closest('.search-bar')) searchSuggestions.classList.remove('active');
 });
 
@@ -1828,8 +1958,8 @@ uploadForm.addEventListener('submit', async (e) => {
             return;
         }
         
-        // ⭐ Insertar UNA fila por cada foto
-        const rows = photoUrls.map(url => ({
+                // ⭐ Insertar UNA fila por cada foto (con su pie de foto)
+        const rows = photoUrls.map((url, idx) => ({
             title,
             description: summary,
             category,
@@ -1837,6 +1967,7 @@ uploadForm.addEventListener('submit', async (e) => {
             author,
             author_id: currentUser.id,
             image_url: url,
+            caption: uploadedPhotoCaptions[idx]?.trim() || null,   // ⭐ NUEVO
             reads: 'Nuevo'
         }));
         
@@ -1888,10 +2019,13 @@ uploadForm.addEventListener('submit', async (e) => {
     const finalImage = uploadedImageUrl || imageUrl || 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=600&q=80';
     const finalVideo = uploadedVideoUrl || videoUrl || null;
     
+        const imageCaption = (document.getElementById('artImageCaption')?.value || '').trim() || null;
+
     if (editingArticleId) {
         const { error } = await supabaseClient.from('articles').update({
             title, summary, category, cat_name: catInfo.name,
-            author, image: finalImage, video_url: finalVideo,
+            author, image: finalImage, image_caption: imageCaption,   // ⭐ NUEVO
+            video_url: finalVideo,
             content: contentHTML, content_type: contentType
         }).eq('id', editingArticleId);
         if (error) {
@@ -1901,10 +2035,11 @@ uploadForm.addEventListener('submit', async (e) => {
         }
         showToast(`"${title}" actualizado.`, 'success');
     } else {
-        const { error } = await supabaseClient.from('articles').insert({
+                const { error } = await supabaseClient.from('articles').insert({
             title, summary, category, cat_name: catInfo.name,
             author, author_id: currentUser.id,
-            image: finalImage, video_url: finalVideo,
+            image: finalImage, image_caption: imageCaption,   // ⭐ NUEVO
+            video_url: finalVideo,
             content: contentHTML, content_type: contentType,
             pages: Math.floor(Math.random() * 10) + 1,
             reads: 'Nuevo'
@@ -2058,21 +2193,25 @@ profileModal.addEventListener('click', (e) => {
     }
 });
 
-editProfileBtn?.addEventListener('click', openEditProfileModal);
+editProfileBtn?.addEventListener('click', () => {
+    // ⭐ Cerrar el perfil ANTES de abrir el modal de editar
+    profileModal.classList.remove('active');
+    setTimeout(() => openEditProfileModal(null), 50);
+});
 closeEditProfile?.addEventListener('click', () => { editProfileModal.classList.remove('active'); document.body.classList.remove('modal-open'); });
 editProfileModal.addEventListener('click', (e) => { if (e.target === editProfileModal) { editProfileModal.classList.remove('active'); document.body.classList.remove('modal-open'); } });
 
 closeReading.addEventListener('click', () => { 
     readingModal.classList.remove('active'); 
     document.body.classList.remove('modal-open');
-    window.history.pushState({}, '', SITE_URL);
+    try { window.history.pushState({}, '', SITE_URL); } catch (e) {}
 });
 
 readingModal.addEventListener('click', (e) => { 
     if (e.target === readingModal) { 
         readingModal.classList.remove('active'); 
         document.body.classList.remove('modal-open');
-        window.history.pushState({}, '', SITE_URL);
+        try { window.history.pushState({}, '', SITE_URL); } catch (e) {}
     } 
 });
 
@@ -2081,12 +2220,17 @@ downloadPdfBtn.addEventListener('click', () => { if (currentReadingArticle) down
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+        const cropperModal = document.getElementById('cropperModal');
+        if (cropperModal && cropperModal.classList.contains('active')) {
+            closeCropper();
+            return;
+        }
         document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
         document.body.classList.remove('modal-open');
-        window.history.pushState({}, '', SITE_URL);
+        document.body.classList.remove('cropper-open');
+        try { window.history.pushState({}, '', SITE_URL); } catch (e) {}
     }
 });
-
 confirmModal.addEventListener('click', (e) => { 
     if (e.target === confirmModal) {
         confirmModal.classList.remove('active'); 
@@ -2147,6 +2291,12 @@ function showLogoutConfirm() {
 let galleryDB = [];
 let currentAlbum = null;
 let uploadedPhotoUrls = [];   // ⭐ ahora es un array
+let uploadedPhotoCaptions = [];   // ⭐ pies de foto alineados por índice con uploadedPhotoUrls
+let adminEditingUserId = null;  // null = editando mi propio perfil | id = editando a otro (admin)
+// Cropper
+let cropperInstance = null;
+let cropperMode = null;       // 'avatar' o 'cover'
+let cropperTargetInputId = null;  // id del input original ('editAvatarFile' o 'artImageFile')
 // ==========================================
 // CARGAR LISTA DE AUTORES
 // ==========================================
@@ -2205,6 +2355,7 @@ async function loadGallery() {
                 id: p.id,
                 title: p.title,
                 description: p.description,
+caption: p.caption,                    // ⭐ NUEVO
                 category: p.category,
                 catName: p.cat_name,
                 author: p.author,
@@ -2304,12 +2455,12 @@ function openPhotoViewer(photo) {
     document.getElementById('photoViewerImage').src = photo.image_url;
     document.getElementById('photoViewerTitle').textContent = photo.title;
     document.getElementById('photoViewerDescription').textContent = photo.description || '';
+    document.getElementById('photoViewerCaption').textContent = photo.caption || '';   // ⭐ NUEVO
     document.getElementById('photoViewerAuthor').textContent = `Por ${photo.author}`;
     document.getElementById('photoViewerCategory').textContent = photo.catName;
     
     document.getElementById('photoViewerModal').classList.add('active');
 }
-
 async function uploadPhotoToSupabase(file) {
     if (!file) return null;
     if (!file.type.startsWith('image/')) {
@@ -2407,6 +2558,793 @@ document.getElementById('clearPhotoBtn')?.addEventListener('click', () => {
     previewContainer.style.display = 'none';
     uploadedPhotoUrls = [];
 });
+
+// ==========================================
+// 19. PANEL DE ADMINISTRADOR
+// ==========================================
+
+function isAdmin() {
+    return currentUser && currentUser.role === 'admin';
+}
+
+function openAdminPanel() {
+    if (!isAdmin()) {
+        showToast('No tienes permisos de administrador.', 'error', 'Acceso denegado');
+        return;
+    }
+    adminPanelModal.classList.add('active');
+    document.body.classList.add('modal-open');
+    renderAdminContent();
+}
+
+function closeAdminPanelModal() {
+    adminPanelModal.classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
+// ============ PESTAÑA CONTENIDO ============
+function renderAdminContent() {
+    if (!adminContentList) return;
+    
+    const searchTerm = (adminSearchContent?.value || '').toLowerCase().trim();
+    const filterType = adminFilterType?.value || 'all';
+    
+    // Combinar artículos + fotos de galería
+    let allContent = articlesDB.map(a => ({
+        ...a,
+        type: a.content_type || 'article'
+    }));
+    
+    const photos = galleryDB.map(p => ({
+        id: p.id,
+        title: p.title,
+        summary: p.description,
+        author: p.author,
+        author_id: p.author_id,
+        image: p.image_url,
+        catName: p.catName,
+        category: p.category,
+        type: 'photo',
+        created_at: p.created_at,
+        _isPhoto: true
+    }));
+    
+    allContent = [...allContent, ...photos];
+    
+    // Ordenar por fecha descendente
+    allContent.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    // Filtrar por tipo
+    if (filterType !== 'all') {
+        allContent = allContent.filter(c => c.type === filterType);
+    }
+    
+    // Filtrar por búsqueda
+    if (searchTerm) {
+        allContent = allContent.filter(c =>
+            (c.title || '').toLowerCase().includes(searchTerm) ||
+            (c.author || '').toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    if (allContent.length === 0) {
+        adminContentList.innerHTML = `<div class="admin-empty">No se encontró contenido.</div>`;
+        return;
+    }
+    
+    adminContentList.innerHTML = '';
+    
+    allContent.forEach(item => {
+        const badgeClass = `badge-${item.type}`;
+        const itemClass = `type-${item.type}`;
+        const typeLabel = item.type === 'article' ? 'Artículo' :
+                         item.type === 'video' ? 'Video' : 'Foto';
+        
+        const date = item.created_at ? new Date(item.created_at).toLocaleDateString('es-ES', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        }) : '';
+        
+        const div = document.createElement('div');
+        div.className = `admin-item ${itemClass}`;
+        div.innerHTML = `
+            <img class="admin-item-thumb" src="${item.image || ''}" onerror="this.src='https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200&q=80'">
+            <div class="admin-item-info">
+                <div class="admin-item-title">${item.title}</div>
+                <div class="admin-item-meta">
+                    <span class="admin-item-badge ${badgeClass}">${typeLabel}</span>
+                    <span>👤 ${item.author}</span>
+                    <span>📁 ${item.catName || ''}</span>
+                    <span>📅 ${date}</span>
+                </div>
+            </div>
+            <div></div>
+            <div class="admin-item-actions">
+                <button class="admin-btn-sm admin-btn-view" data-action="view">Ver</button>
+                ${item.type !== 'photo' ? '<button class="admin-btn-sm admin-btn-edit" data-action="edit">✎ Editar</button>' : ''}
+                <button class="admin-btn-sm admin-btn-delete" data-action="delete">🗑</button>
+            </div>
+        `;
+        
+        // Eventos
+        div.querySelector('[data-action="view"]').addEventListener('click', () => {
+            closeAdminPanelModal();
+            if (item.type === 'photo') {
+                openPhotoViewer({
+                    image_url: item.image,
+                    title: item.title,
+                    description: item.summary,
+                    author: item.author,
+                    catName: item.catName
+                });
+            } else {
+                openReadingModal(item);
+            }
+        });
+        
+        const editBtn = div.querySelector('[data-action="edit"]');
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
+                closeAdminPanelModal();
+                setTimeout(() => openEditArticle(item), 100);
+            });
+        }
+        
+        div.querySelector('[data-action="delete"]').addEventListener('click', () => {
+            showConfirm(
+                `¿Eliminar "${item.title}" de ${item.author}?`,
+                async () => {
+                    if (item.type === 'photo') {
+                        const { error } = await supabaseClient.from('gallery').delete().eq('id', item.id);
+                        if (error) { showToast('Error: ' + error.message, 'error'); return; }
+                        await loadGallery();
+                        showToast('Foto eliminada.', 'success');
+                    } else {
+                        const { error } = await supabaseClient.from('articles').delete().eq('id', item.id);
+                        if (error) { showToast('Error: ' + error.message, 'error'); return; }
+                        await loadState();
+                        showToast('Contenido eliminado.', 'success');
+                    }
+                    renderAdminContent();
+                },
+                { title: 'Eliminar contenido', icon: '🗑️', confirmText: 'Eliminar' }
+            );
+        });
+        
+        adminContentList.appendChild(div);
+    });
+}
+
+// ============ PESTAÑA USUARIOS ============
+async function renderAdminUsers() {
+    if (!adminUsersList) return;
+    
+    adminUsersList.innerHTML = '<div class="admin-empty">Cargando usuarios...</div>';
+    
+    try {
+        const { data: profiles, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .order('username', { ascending: true });
+        
+        if (error) {
+            adminUsersList.innerHTML = `<div class="admin-empty">Error: ${error.message}</div>`;
+            return;
+        }
+        
+        if (!profiles || profiles.length === 0) {
+            adminUsersList.innerHTML = '<div class="admin-empty">No hay usuarios.</div>';
+            return;
+        }
+        
+        const searchTerm = (adminSearchUsers?.value || '').toLowerCase().trim();
+        let filtered = profiles;
+        
+        if (searchTerm) {
+            filtered = profiles.filter(p =>
+                (p.username || '').toLowerCase().includes(searchTerm) ||
+                (p.email || '').toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        if (filtered.length === 0) {
+            adminUsersList.innerHTML = '<div class="admin-empty">No hay coincidencias.</div>';
+            return;
+        }
+        
+        adminUsersList.innerHTML = '';
+        
+        filtered.forEach(profile => {
+            const role = profile.role || 'reader';
+            const roleLabel = role === 'admin' ? 'Admin' : role === 'editor' ? 'Editor' : 'Lector';
+            const roleClass = `role-badge-${role}`;
+            const isPublish = profile.can_publish === true;
+            const isMe = currentUser && currentUser.id === profile.id;
+            
+            const avatar = profile.avatar_url ||
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(profile.username || 'U') + '&background=E63946&color=fff&size=100';
+            
+            const div = document.createElement('div');
+            div.className = `user-item role-${role}`;
+            div.innerHTML = `
+                <img class="user-item-avatar" src="${avatar}" alt="">
+                <div class="user-item-info">
+                    <div class="user-item-name">
+                        ${profile.username || 'Sin nombre'}
+                        ${isMe ? '<span style="font-size:11px;color:#F59E0B;">(tú)</span>' : ''}
+                    </div>
+                    <div class="user-item-email">${profile.email || '—'}</div>
+                </div>
+                <div class="user-publish-toggle">
+                    <span>Publicar</span>
+                    <div class="toggle-switch ${isPublish ? 'active' : ''}" data-toggle-publish></div>
+                </div>
+                                <div class="user-item-actions">
+                    <span class="user-role-badge ${roleClass}" data-role-badge>${roleLabel}</span>
+                    <button class="admin-btn-sm admin-btn-profile" data-action="edit-profile" style="margin-left:8px;">✎ Editar</button>
+                    <button class="admin-btn-sm admin-btn-edit" data-action="cycle-role" style="margin-left:6px;">Rol</button>
+                </div>
+            `;
+            
+            // Toggle can_publish
+            div.querySelector('[data-toggle-publish]').addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const toggle = e.currentTarget;
+                const newValue = !toggle.classList.contains('active');
+                toggle.classList.toggle('active', newValue);
+                
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .update({ can_publish: newValue })
+                    .eq('id', profile.id);
+                
+                if (error) {
+                    showToast('Error: ' + error.message, 'error');
+                    toggle.classList.toggle('active', !newValue);
+                    return;
+                }
+                showToast(`${profile.username} ${newValue ? 'ahora puede' : 'ya no puede'} publicar.`, 'success');
+            });
+            
+            // Cambiar rol (ciclo: reader → editor → admin → reader)
+            div.querySelector('[data-action="cycle-role"]').addEventListener('click', async () => {
+                if (isMe) {
+                    showToast('No puedes cambiar tu propio rol.', 'error');
+                    return;
+                }
+                
+                const nextRole = role === 'reader' ? 'editor' : role === 'editor' ? 'admin' : 'reader';
+                const nextLabel = nextRole === 'admin' ? 'Admin' : nextRole === 'editor' ? 'Editor' : 'Lector';
+                
+                showConfirm(
+                    `¿Cambiar el rol de "${profile.username}" a ${nextLabel}?`,
+                    async () => {
+                        const updates = { role: nextRole };
+                        // Si pasa a editor o admin, dar permiso de publicar automáticamente
+                        if (nextRole === 'editor' || nextRole === 'admin') {
+                            updates.can_publish = true;
+                        }
+                        
+                        const { error } = await supabaseClient
+                            .from('profiles')
+                            .update(updates)
+                            .eq('id', profile.id);
+                        
+                        if (error) {
+                            showToast('Error: ' + error.message, 'error');
+                            return;
+                        }
+                        showToast(`Rol de ${profile.username} → ${nextLabel}`, 'success');
+                        renderAdminUsers();
+                    },
+                    { title: 'Cambiar rol', icon: '👤', confirmText: `Hacer ${nextLabel}` }
+                );
+            });
+            // Botón "Editar perfil" (admin)
+            div.querySelector('[data-action="edit-profile"]').addEventListener('click', () => {
+                window._adminEditingProfileCache = profile;
+                closeAdminPanelModal();
+                setTimeout(() => openEditProfileModal(profile.id), 150);
+            });
+            
+            adminUsersList.appendChild(div);
+        });
+    } catch (e) {
+        adminUsersList.innerHTML = `<div class="admin-empty">Error inesperado: ${e.message}</div>`;
+    }
+}
+
+// ============ EVENTOS DEL PANEL ============
+adminPanelBtn?.addEventListener('click', openAdminPanel);
+closeAdminPanel?.addEventListener('click', closeAdminPanelModal);
+adminPanelModal?.addEventListener('click', (e) => {
+    if (e.target === adminPanelModal) closeAdminPanelModal();
+});
+
+adminTabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        adminTabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.adminTab;
+        
+        if (tab === 'content') {
+            adminTabContent.style.display = 'block';
+            adminTabUsers.style.display = 'none';
+            renderAdminContent();
+        } else {
+            adminTabContent.style.display = 'none';
+            adminTabUsers.style.display = 'block';
+            renderAdminUsers();
+        }
+    });
+});
+
+adminSearchContent?.addEventListener('input', renderAdminContent);
+adminFilterType?.addEventListener('change', renderAdminContent);
+adminSearchUsers?.addEventListener('input', renderAdminUsers);
+
+
+// ==========================================
+// 21. LISTENER DE VIDEO (reparado)
+// ==========================================
+document.addEventListener('change', async (e) => {
+    if (e.target && e.target.id === 'artPhotoFile') {
+        console.log('📸 Fotos seleccionadas:', e.target.files.length);
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+        
+        const previewContainer = document.getElementById('photoPreviewContainer');
+        const captionsContainer = document.getElementById('photoCaptionsContainer');
+        const captionsList = document.getElementById('photoCaptionsList');
+        
+        previewContainer.innerHTML = '';
+        previewContainer.style.display = 'grid';
+        if (captionsList) captionsList.innerHTML = '';
+        if (captionsContainer) captionsContainer.style.display = 'block';
+        
+        uploadedPhotoUrls = [];
+        uploadedPhotoCaptions = [];
+        
+        for (const file of files) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = document.createElement('img');
+                img.src = event.target.result;
+                img.style.cssText = 'width: 100%; height: 120px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);';
+                previewContainer.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+            
+            const url = await uploadPhotoToSupabase(file);
+            if (url) {
+                const index = uploadedPhotoUrls.length;
+                uploadedPhotoUrls.push(url);
+                uploadedPhotoCaptions.push('');
+                
+                // ⭐ Crear input de pie de foto para esta foto
+                const captionRow = document.createElement('div');
+                captionRow.style.cssText = 'display:flex; gap:8px; align-items:center; margin-bottom:8px; background:#f9f9f9; padding:8px; border-radius:6px; border:1px solid #eee;';
+                captionRow.innerHTML = `
+                    <img src="${url}" style="width:44px; height:44px; object-fit:cover; border-radius:4px; flex-shrink:0;">
+                    <input type="text" 
+                           placeholder="Pie de foto (ej. 'Gol de Messi al minuto 90')" 
+                           maxlength="200"
+                           data-photo-index="${index}"
+                           style="flex:1; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family:var(--font-body); font-size:13px;">
+                `;
+                const input = captionRow.querySelector('input');
+                input.addEventListener('input', (ev) => {
+                    uploadedPhotoCaptions[index] = ev.target.value;
+                });
+                if (captionsList) captionsList.appendChild(captionRow);
+            }
+        }
+        
+        if (uploadedPhotoUrls.length > 0) {
+            document.getElementById('artPhoto').value = uploadedPhotoUrls[0];
+            showToast(`${uploadedPhotoUrls.length} foto(s) subida(s). Escribe su pie de foto.`, 'success');
+        }
+    }
+});
+
+// ==========================================
+// 22. LISTENER DE FOTO MÚLTIPLE (reparado)
+// ==========================================
+document.addEventListener('change', async (e) => {
+    if (e.target && e.target.id === 'artPhotoFile') {
+        console.log('📸 Fotos seleccionadas:', e.target.files.length);
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+        
+        const previewContainer = document.getElementById('photoPreviewContainer');
+        previewContainer.innerHTML = '';
+        previewContainer.style.display = 'grid';
+        uploadedPhotoUrls = [];
+        
+        for (const file of files) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = document.createElement('img');
+                img.src = event.target.result;
+                img.style.cssText = 'width: 100%; height: 120px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);';
+                previewContainer.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+            
+            const url = await uploadPhotoToSupabase(file);
+            if (url) uploadedPhotoUrls.push(url);
+        }
+        
+        if (uploadedPhotoUrls.length > 0) {
+            document.getElementById('artPhoto').value = uploadedPhotoUrls[0];
+            showToast(`${uploadedPhotoUrls.length} foto(s) subida(s).`, 'success');
+        }
+    }
+});
+
+console.log('✅ Listeners globales registrados (avatar, imagen, video, foto)');
+// ==========================================
+// 20. CROPPER (RECORTE DE IMÁGENES)
+// ==========================================
+
+/**
+ * Abre el modal del cropper
+ * @param {string} imageSrc - Data URL o URL pública de la imagen a recortar
+ * @param {'avatar'|'cover'} mode - Tipo de recorte
+ * @param {string} targetInputId - ID del input que contenía el archivo original
+ */
+function openCropper(imageSrc, mode, targetInputId) {
+    const modal = document.getElementById('cropperModal');
+    const img = document.getElementById('cropperImage');
+    const title = document.getElementById('cropperTitle');
+    const subtitle = document.getElementById('cropperSubtitle');
+    const zoomSlider = document.getElementById('cropperZoom');
+    
+    // Configurar según el modo
+    cropperMode = mode;
+    cropperTargetInputId = targetInputId;
+    
+    if (mode === 'avatar') {
+        title.textContent = '🖼️ Ajustar foto de perfil';
+        subtitle.textContent = 'Recorta como un cuadrado perfecto — el resultado se verá redondeado';
+        modal.classList.remove('portrait-mode');
+    } else {
+        title.textContent = '🖼️ Ajustar portada';
+        subtitle.textContent = 'Recorta como rectángulo 16:9 — formato de portada para artículos';
+        modal.classList.add('portrait-mode');
+    }
+    
+    // ⭐ 1. PRIMERO: destruir instancia previa (si existe)
+if (cropperInstance) {
+    cropperInstance.destroy();
+    cropperInstance = null;
+}
+
+// ⭐ 2. Marcar el body para ocultar navbar/categorías/tabs
+document.body.classList.add('cropper-open');
+
+// ⭐ 3. Ocultar TODOS los modales abiertos debajo del cropper
+window._modalsHiddenByCropper = [];
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    if (m.id !== 'cropperModal') {
+        const originalDisplay = m.style.display || '';
+        const originalPointer = m.style.pointerEvents || '';
+        m.style.display = 'none';
+        m.style.pointerEvents = 'none';
+        window._modalsHiddenByCropper.push({ 
+            el: m, 
+            display: originalDisplay, 
+            pointerEvents: originalPointer 
+        });
+    }
+});
+
+// ⭐ 4. Abrir modal
+modal.classList.add('active');
+document.body.classList.add('modal-open');
+
+// ⭐ 5. CLAVE: Definir onload ANTES de asignar src
+const initCropper = () => {
+    const aspectRatio = mode === 'avatar' ? 1 : 16 / 9;
+    
+    cropperInstance = new Cropper(img, {
+        aspectRatio: aspectRatio,
+        viewMode: 2,
+        dragMode: 'move',
+        autoCropArea: 1,
+        restore: false,
+        guides: true,
+        center: true,
+        highlight: false,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+        background: false,
+modal: false,
+        responsive: true,
+        checkCrossOrigin: false,
+        ready() {
+            zoomSlider.value = 1;
+        },
+        zoom(event) {
+            zoomSlider.value = event.detail.ratio;
+        }
+    });
+};
+
+// Bandera para garantizar que initCropper solo corra UNA vez
+let cropperYaInicializado = false;
+
+const initCropperOnce = () => {
+    if (cropperYaInicializado) return;   // ⬅️ protege contra doble llamada
+    if (!img.naturalWidth || !img.naturalHeight) return;  // imagen no lista
+    cropperYaInicializado = true;
+    initCropper();
+};
+
+// Remover handlers previos
+img.onload = null;
+img.onerror = null;
+
+// Asignar handler ANTES de cambiar el src
+img.onload = initCropperOnce;
+
+// Asignar el src (dispara onload si no está cacheada)
+img.src = imageSrc;
+
+// Si la imagen ya estaba completa (cache), disparar manualmente
+// pero con la bandera protegida para que NO se duplique
+if (img.complete && img.naturalWidth > 0) {
+    initCropperOnce();
+}
+}
+
+/**
+ * Cierra el modal del cropper sin aplicar
+ */
+function closeCropper() {
+    // Destruir instancia de Cropper.js
+    if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+    }
+    
+    // Cerrar el modal del cropper
+    const modal = document.getElementById('cropperModal');
+    if (modal) modal.classList.remove('active');
+    
+    // ⭐ Restaurar TODOS los modales — SIEMPRE, sin importar el estado guardado
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.style.pointerEvents = '';   // ← limpia SIEMPRE
+        // Solo restauramos el display si el cropper lo ocultó
+    });
+    
+    // Si tenemos la lista de modales que ocultamos, restaurar el display
+    if (window._modalsHiddenByCropper) {
+        window._modalsHiddenByCropper.forEach(item => {
+            if (item.el) {
+                item.el.style.display = item.display || '';
+            }
+        });
+        window._modalsHiddenByCropper = null;
+    }
+    
+    // Quitar la bandera del body
+    document.body.classList.remove('cropper-open');
+    
+    // Resetear el input original
+    if (cropperTargetInputId) {
+        const input = document.getElementById(cropperTargetInputId);
+        if (input) input.value = '';
+    }
+    cropperMode = null;
+    cropperTargetInputId = null;
+    
+    // Limpiar estado del body — SIN volver a poner modal-open
+    // porque si hay otro modal abierto, el usuario debe verlo pero no bloquear
+    document.body.classList.remove('modal-open');
+    
+    // Si el editProfileModal sigue abierto, reactivar modal-open
+    setTimeout(() => {
+        const anyModalActive = document.querySelector('.modal-overlay.active');
+        if (anyModalActive) {
+            document.body.classList.add('modal-open');
+        }
+    }, 50);
+}
+
+/**
+ * Aplica el recorte y sube la imagen resultante a Supabase
+ */
+async function applyCropAndUpload() {
+    if (!cropperInstance) return;
+    
+    const btn = document.getElementById('cropperApply');
+    btn.disabled = true;
+    btn.textContent = 'Procesando...';
+    
+    try {
+        // Dimensión final según modo
+        let outputWidth, outputHeight;
+        if (cropperMode === 'avatar') {
+            outputWidth = 400;
+            outputHeight = 400;
+        } else {
+            outputWidth = 1200;
+            outputHeight = 675; // 16:9
+        }
+        
+        // Generar el canvas recortado
+        const canvas = cropperInstance.getCroppedCanvas({
+            width: outputWidth,
+            height: outputHeight,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
+            fillColor: '#fff'
+        });
+        
+        if (!canvas) {
+            throw new Error('No se pudo generar el recorte');
+        }
+        
+        // Convertir a Blob
+        const blob = await new Promise((resolve) => {
+            canvas.toBlob(resolve, 'image/jpeg', 0.92);
+        });
+        
+        if (!blob) {
+            throw new Error('Error al convertir imagen');
+        }
+        
+        // Crear archivo a partir del blob
+        const filename = `cropped_${Date.now()}.jpg`;
+        const file = new File([blob], filename, { type: 'image/jpeg' });
+        
+        // Subir según el modo
+        if (cropperMode === 'avatar') {
+            // === AVATAR ===
+            const url = await uploadFileToSupabase(file, 'image', AVATAR_BUCKET);
+            if (url) {
+                uploadedAvatarUrl = url;
+                // Actualizar preview del modal de edición
+                const preview = document.getElementById('editAvatarPreview');
+                if (preview) preview.src = url;
+                console.log('✅ Avatar recortado y subido:', url);
+                showToast('Foto de perfil actualizada.', 'success');
+            }
+        } else {
+            // === PORTADA ===
+            const url = await uploadFileToSupabase(file, 'image');
+            if (url) {
+                uploadedImageUrl = url;
+                // Actualizar preview del CMS
+                const preview = document.getElementById('imagePreview');
+                const container = document.getElementById('imagePreviewContainer');
+                if (preview) preview.src = url;
+                if (container) container.style.display = 'block';
+                // Rellenar el campo URL oculto
+                const artImageInput = document.getElementById('artImage');
+                if (artImageInput) artImageInput.value = url;
+                console.log('✅ Portada recortada y subida:', url);
+                showToast('Portada ajustada correctamente.', 'success');
+            }
+        }
+        
+        closeCropper();
+    } catch (err) {
+        console.error('Error al aplicar el recorte:', err);
+        showToast('Error al procesar la imagen.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✓ Aplicar recorte';
+    }
+}
+
+// ============ EVENTOS DEL CROPPER ============
+
+// Botones de control
+document.getElementById('cropperRotateLeft')?.addEventListener('click', () => {
+    cropperInstance?.rotate(-90);
+});
+document.getElementById('cropperRotateRight')?.addEventListener('click', () => {
+    cropperInstance?.rotate(90);
+});
+document.getElementById('cropperFlipH')?.addEventListener('click', () => {
+    if (cropperInstance) {
+        const scaleX = cropperInstance.getData().scaleX || 1;
+        cropperInstance.scaleX(-scaleX);
+    }
+});
+document.getElementById('cropperFlipV')?.addEventListener('click', () => {
+    if (cropperInstance) {
+        const scaleY = cropperInstance.getData().scaleY || 1;
+        cropperInstance.scaleY(-scaleY);
+    }
+});
+document.getElementById('cropperReset')?.addEventListener('click', () => {
+    cropperInstance?.reset();
+    const zoomSlider = document.getElementById('cropperZoom');
+    if (zoomSlider) zoomSlider.value = 1;
+});
+
+// Slider de zoom
+document.getElementById('cropperZoom')?.addEventListener('input', (e) => {
+    if (cropperInstance) {
+        cropperInstance.zoomTo(parseFloat(e.target.value));
+    }
+});
+
+// Botones de acción
+document.getElementById('cropperCancel')?.addEventListener('click', closeCropper);
+document.getElementById('cropperApply')?.addEventListener('click', applyCropAndUpload);
+
+// Cerrar con Escape o clic fuera
+document.getElementById('cropperModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'cropperModal') closeCropper();
+});
+
+// ============ INTERCEPTAR SELECTORES DE ARCHIVO ============
+// En lugar de subir directo, abrimos el cropper
+
+// 1. AVATAR (solo cuando se edita perfil, no cuando es cambio de imagen del CMS)
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'editAvatarFile') {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Validar tipo
+        if (!file.type.startsWith('image/')) {
+            showToast('Solo se permiten imágenes.', 'error');
+            e.target.value = '';
+            return;
+        }
+        
+        // Validar tamaño (máx 15MB antes de recortar)
+        if (file.size > 15 * 1024 * 1024) {
+            showToast('La imagen supera los 15 MB.', 'error');
+            e.target.value = '';
+            return;
+        }
+        
+        console.log('📸 Abriendo cropper para avatar:', file.name);
+        
+        // Leer la imagen y abrir el cropper
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            openCropper(event.target.result, 'avatar', 'editAvatarFile');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// 2. PORTADA DE ARTÍCULO
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'artImageFile') {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (!file.type.startsWith('image/')) {
+            showToast('Solo se permiten imágenes.', 'error');
+            e.target.value = '';
+            return;
+        }
+        
+        if (file.size > 15 * 1024 * 1024) {
+            showToast('La imagen supera los 15 MB.', 'error');
+            e.target.value = '';
+            return;
+        }
+        
+        console.log('📸 Abriendo cropper para portada:', file.name);
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            openCropper(event.target.result, 'cover', 'artImageFile');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+console.log('✅ Cropper inicializado');
 
 // ==========================================
 // 18. INICIALIZACIÓN
