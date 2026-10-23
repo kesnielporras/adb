@@ -26,7 +26,7 @@ let uploadedImageUrl = null;
 let uploadedVideoUrl = null;
 let uploadedAvatarUrl = null;
 let tinyEditor = null;
-
+let liveStreamActive = null;
 const categoryMap = {
     'futbol': { name: 'Fútbol' },
     'basquetbol': { name: 'Básquetbol' },
@@ -610,7 +610,7 @@ function renderSections() {
             vocesSection.className = 'voces-section';
             vocesSection.innerHTML = `
                 <div class="voces-header">
-                    <h2 class="voces-title">🗣️ Las Voces de ADB</h2>
+                    <h2 class="voces-title">🗣️ Las Voces de La Forja</h2>
                 </div>
                 <div class="voces-scroll" id="voces-scroll-container"></div>
             `;
@@ -1755,6 +1755,10 @@ function updateAuthUI() {
         // ⭐ MOSTRAR BOTÓN ADMIN SI CORRESPONDE
         if (adminPanelBtn) {
             adminPanelBtn.style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+            const goLiveBtn = document.getElementById('goLiveBtn');
+if (goLiveBtn) {
+    goLiveBtn.style.display = (currentUser.role === 'admin' || currentUser.role === 'editor') ? 'inline-block' : 'none';
+}
         }
     } else {
         loginBtn.style.display = 'inline-block';
@@ -3359,7 +3363,79 @@ document.addEventListener('change', (e) => {
 });
 
 console.log('✅ Cropper inicializado');
+// Botón para abrir el modal de configuración de transmisión
+document.getElementById('goLiveBtn')?.addEventListener('click', () => {
+    document.getElementById('liveConfigModal').classList.add('active');
+    document.body.classList.add('modal-open');
+});
 
+// Cerrar el modal
+document.getElementById('closeLiveConfig')?.addEventListener('click', () => {
+    document.getElementById('liveConfigModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
+});
+
+// Procesar el formulario del modal
+document.getElementById('liveConfigForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('configLiveTitle').value.trim();
+    const url = document.getElementById('configLiveUrl').value.trim();
+    
+    if (!title || !url) return;
+    
+    // Cambiar texto del botón para dar feedback
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Conectando...';
+    submitBtn.disabled = true;
+    
+    // Apagar cualquier transmisión anterior
+    await supabaseClient.from('live_streams').update({ is_live: false }).eq('is_live', true);
+    
+    // Crear la nueva
+    const { error } = await supabaseClient.from('live_streams').insert({
+        title: title,
+        youtube_url: url,
+        is_live: true
+    });
+    
+    if (error) {
+        showToast("Error al transmitir: " + error.message, "error");
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    } else {
+        showToast("¡Estás EN VIVO!", "success");
+        document.getElementById('liveConfigModal').classList.remove('active');
+        document.body.classList.remove('modal-open');
+        e.target.reset(); // Limpiar form
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        
+        await checkLiveStatus();
+    }
+});
+
+// Botón de cerrar transmisión en la vista pública
+document.getElementById('closeLiveBtn')?.addEventListener('click', () => {
+    document.getElementById('livePlayerContainer').style.display = 'none';
+});
+// ⭐ APAGAR TRANSMISIÓN (Solo Admin)
+document.getElementById('stopLiveBtn')?.addEventListener('click', async () => {
+    if (!confirm("¿Estás seguro de que quieres detener la transmisión en vivo?")) return;
+    
+    // Actualizamos la base de datos para decir que ya no está en vivo
+    const { error } = await supabaseClient
+        .from('live_streams')
+        .update({ is_live: false })
+        .eq('is_live', true);
+        
+    if (error) {
+        showToast("Error al apagar: " + error.message, "error");
+    } else {
+        showToast("Transmisión finalizada.", "info");
+        await checkLiveStatus(); // Esto oculta el video automáticamente
+    }
+});
 // ==========================================
 // 18. INICIALIZACIÓN
 // ==========================================
@@ -3371,7 +3447,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadState();
     await loadGallery();
     await loadAuthors();
+    await checkLiveStatus();
     updateAuthUI();
     renderSections();
     await checkUrlForArticle();
 });
+async function checkLiveStatus() {
+    const { data, error } = await supabaseClient
+        .from('live_streams')
+        .select('*')
+        .eq('is_live', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+        
+    if (!error && data) {
+        liveStreamActive = data;
+        const container = document.getElementById('livePlayerContainer');
+        const iframe = document.getElementById('liveIframe');
+        const title = document.getElementById('liveTitle');
+        
+        // ⭐ MEJOR EXTRACTOR DE ID DE YOUTUBE ⭐
+        let videoId = '';
+        const url = data.youtube_url;
+        
+        if (url.includes('youtube.com/watch?v=')) {
+            videoId = url.split('v=')[1].split('&')[0];
+        } else if (url.includes('youtu.be/')) {
+            videoId = url.split('youtu.be/')[1].split('?')[0];
+        } else if (url.includes('youtube.com/live/')) {
+            videoId = url.split('live/')[1].split('?')[0];
+        } else if (url.includes('youtube.com/embed/')) {
+            videoId = url.split('embed/')[1].split('?')[0];
+        } else {
+            videoId = url; // Si el usuario pegó solo el ID
+        }
+        
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
+        title.textContent = data.title;
+        container.style.display = 'block';
+                // Mostrar el botón de apagar SOLO si es admin o editor
+        const stopBtn = document.getElementById('stopLiveBtn');
+        if (stopBtn && currentUser && (currentUser.role === 'admin' || currentUser.role === 'editor')) {
+            stopBtn.style.display = 'inline-block';
+        }
+    } else {
+        liveStreamActive = null;
+        const container = document.getElementById('livePlayerContainer');
+        if(container) container.style.display = 'none';
+        const iframe = document.getElementById('liveIframe');
+        if(iframe) iframe.src = '';
+    }
+}
