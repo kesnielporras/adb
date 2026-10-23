@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const SITE_URL = 'https://asi-de-bolas-deportes.netlify.app/';
+const SITE_URL = 'https://la-forja-udep.netlify.app/';
 const BUCKET = 'asi-de-bolas-media';
 const AVATAR_BUCKET = 'avatars';
 
