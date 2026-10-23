@@ -3467,31 +3467,37 @@ async function checkLiveStatus() {
         const iframe = document.getElementById('liveIframe');
         const title = document.getElementById('liveTitle');
         
-        // ⭐ MEJOR EXTRACTOR DE ID DE YOUTUBE ⭐
-        let videoId = '';
-        const url = data.youtube_url;
-        
-        if (url.includes('youtube.com/watch?v=')) {
-            videoId = url.split('v=')[1].split('&')[0];
-        } else if (url.includes('youtu.be/')) {
-            videoId = url.split('youtu.be/')[1].split('?')[0];
-        } else if (url.includes('youtube.com/live/')) {
-            videoId = url.split('live/')[1].split('?')[0];
-        } else if (url.includes('youtube.com/embed/')) {
-            videoId = url.split('embed/')[1].split('?')[0];
+        let finalUrl = '';
+        const url = data.youtube_url; // (La columna se llama así en la BD, pero guardaremos ambas)
+
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            // Lógica de YouTube
+            let videoId = '';
+            if (url.includes('youtube.com/watch?v=')) videoId = url.split('v=')[1].split('&')[0];
+            else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+            else if (url.includes('youtube.com/live/')) videoId = url.split('live/')[1].split('?')[0];
+            else videoId = url;
+            
+            finalUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
+
+        } else if (url.includes('facebook.com')) {
+            // Lógica de Facebook (requiere el plugin oficial)
+            finalUrl = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true`;
         } else {
-            videoId = url; // Si el usuario pegó solo el ID
+            finalUrl = url; // Fallback
         }
         
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
+        iframe.src = finalUrl;
         title.textContent = data.title;
         container.style.display = 'block';
-                // Mostrar el botón de apagar SOLO si es admin o editor
+        
+        // Mostrar el botón de apagar SOLO si es admin o editor
         const stopBtn = document.getElementById('stopLiveBtn');
         if (stopBtn && currentUser && (currentUser.role === 'admin' || currentUser.role === 'editor')) {
             stopBtn.style.display = 'inline-block';
         }
     } else {
+        // ... resto del código de apagado
         liveStreamActive = null;
         const container = document.getElementById('livePlayerContainer');
         if(container) container.style.display = 'none';
