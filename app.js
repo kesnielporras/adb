@@ -1752,13 +1752,13 @@ function updateAuthUI() {
             uploadBtn.style.cursor = 'not-allowed';
         }
         
-        // ⭐ MOSTRAR BOTÓN ADMIN SI CORRESPONDE
+                // ⭐ MOSTRAR BOTÓN ADMIN SI CORRESPONDE
         if (adminPanelBtn) {
             adminPanelBtn.style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
-            const goLiveBtn = document.getElementById('goLiveBtn');
-if (goLiveBtn) {
-    goLiveBtn.style.display = (currentUser.role === 'admin' || currentUser.role === 'editor') ? 'inline-block' : 'none';
-}
+        }
+        const goLiveBtn = document.getElementById('goLiveBtn');
+        if (goLiveBtn) {
+            goLiveBtn.style.display = (currentUser.role === 'admin' || currentUser.role === 'editor') ? 'inline-block' : 'none';
         }
     } else {
         loginBtn.style.display = 'inline-block';
