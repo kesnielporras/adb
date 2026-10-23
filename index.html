@@ -3,42 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Así de Bolas | Contenido Deportivo</title>
+    <title>La Forja | Universidad del Deporte</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --bg-navy: #1B2A41;
-            --bg-navy-light: #24354F;
-            --surface-white: #F1FAEE;
-            --accent-red: #E63946;
-            --accent-red-dark: #B8232F;
+            :root {
+            /* NUEVA PALETA UDEP (Modo Oscuro) */
+            --bg-navy: #0B2B26;           /* Verde oscuro profundo */
+            --bg-navy-light: #143D36;     /* Un tono más claro para las barras */
+            --surface-white: #FDF6E3;     /* Crema del escudo */
+            --accent-red: #881938;        /* Rojo oscuro UDEP */
+            --accent-red-dark: #5C0E24;   /* Rojo más profundo para hover */
             --text-dark: #1A1A1A;
-            --text-muted: #6B6B6B;
-            --border-light: rgba(241, 250, 238, 0.15);
-            --font-title: 'Oswald', sans-serif;
-            --font-body: 'Inter', sans-serif;
-            --card-bg: #F1FAEE;
-            --card-text: #1A1A1A;
-            --header-bg: rgba(27, 42, 65, 0.95);
-            --input-bg: rgba(241, 250, 238, 0.1);
+            --text-muted: #8E9D9A;        /* Gris con toque verdoso */
+            --border-light: rgba(253, 246, 227, 0.15); 
+            --card-bg: #FDF6E3;           
+            --card-text: #0B2B26;         
+            --header-bg: rgba(11, 43, 38, 0.95); 
+            --input-bg: rgba(253, 246, 227, 0.1);
+
+            /* ⭐ FUENTES HELVETICA */
+            --font-title: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --font-body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
         
-        body.light-theme {
-            --bg-navy: #F0F4F8;
-            --bg-navy-light: #E5EBF1;
-            --surface-white: #FFFFFF;
-            --text-dark: #1A1A1A;
-            --text-muted: #666;
-            --border-light: rgba(0, 0, 0, 0.1);
-            --card-bg: #FFFFFF;
-            --card-text: #1A1A1A;
-            --header-bg: rgba(255, 255, 255, 0.95);
-            --input-bg: rgba(0, 0, 0, 0.05);
-        }
+       body.light-theme {
+    /* NUEVA PALETA UDEP (Modo Claro) */
+    --bg-navy: #FDF6E3;           /* Fondo general Crema */
+    --bg-navy-light: #F4EAD5;     /* Un tono más oscuro de crema para barras */
+    --surface-white: #FFFFFF;     /* Blanco puro para los modales */
+    --text-dark: #0B2B26;
+    --text-muted: #536B65;
+    --border-light: rgba(11, 43, 38, 0.15);
+    --card-bg: #FFFFFF;
+    --card-text: #0B2B26;
+    --header-bg: rgba(253, 246, 227, 0.95);
+    --input-bg: rgba(11, 43, 38, 0.05);
+}
         body.light-theme .logo-text,
         body.light-theme .nav-links a,
         body.light-theme .sidebar-menu a,
@@ -385,7 +389,7 @@
             font-family: var(--font-body); font-size: 14px; background: white;
             width: 100%; color: #333;
         }
-        .modal-content textarea { resize: vertical; min-height: 80px; }
+        .modal-content textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
         .modal-content button[type="submit"] {
             background: var(--accent-red); color: white; padding: 12px;
             border: none; border-radius: 4px; font-family: var(--font-title);
@@ -2413,6 +2417,11 @@ body.cropper-open .container {
     .cropper-controls, .cropper-actions { padding: 12px 20px; }
     .cropper-btn { padding: 6px 10px; font-size: 14px; }
 }
+/* Fuerza para títulos con Helvetica */
+.section-title, .doc-title, .voces-title, .en-portada-title, .album-card-title, .reading-modal .modal-header h2, .tab-btn, .category-bar-list a, .btn-upload, .btn-login {
+    letter-spacing: -0.5px;
+    font-weight: 700;
+}
     </style>
 </head>
 <body>
@@ -2420,7 +2429,7 @@ body.cropper-open .container {
     <header>
         <div class="navbar">
             <div class="logo-container" id="logoHome">
-                <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1919.97 1919.97">
+               <img src="logo.png" class="logo-svg" alt="UDEP" style="border-radius: 8px;">
     <defs>
         <style>
             .cls-1 { fill: url(#Degradado_sin_nombre_12-3); }
@@ -2561,7 +2570,7 @@ body.cropper-open .container {
         <path class="cls-11" d="M1111,307.31c-5.36,9.83-10.55,19-15.58,27.55,6.6,3.92,12.56,6.47,12.66,6.51.21.08.41.19.59.32,1.37.92,1.93,2.7,1.26,4.27-.75,1.77-2.81,2.61-4.59,1.85-.45-.19-6.57-2.82-13.49-6.94-2.05,3.42-4.07,6.73-6.05,9.94,6.27,3.64,11.74,5.98,11.85,6.02.21.08.4.2.58.32,1.37.92,1.93,2.7,1.27,4.27-.75,1.78-2.82,2.6-4.59,1.85-.44-.18-6.18-2.64-12.81-6.53-2.13,3.38-4.23,6.64-6.29,9.79,6.08,3.5,11.3,5.73,11.4,5.77.21.08.4.2.58.32,1.37.92,1.93,2.71,1.28,4.27-.77,1.78-2.83,2.61-4.6,1.85-.43-.18-6.01-2.57-12.52-6.36-2.24,3.35-4.43,6.55-6.58,9.62,6.08,3.5,11.3,5.73,11.4,5.77.2.09.41.2.58.32,1.37.93,1.93,2.7,1.28,4.27-.77,1.78-2.83,2.61-4.61,1.85-.43-.19-6.11-2.63-12.7-6.48-3.4,4.75-6.67,9.15-9.78,13.2,13.16,8.07,28.15,14.45,44.46,16.73,10.5-7.43,20.73-17.52,29.83-31,10.38-15.37,15.57-31.12,17.48-45.95-6.09-7.84-17.27-20.99-32.28-33.42Z"/>
     </g>
 </svg>
-                <div class="logo-text">Así de Bolas <span>|</span></div>
+                <div class="logo-text">La Forja <span>|</span></div>
             </div>
 
             <div class="search-bar">
@@ -2632,7 +2641,7 @@ body.cropper-open .container {
     </div>
 
     <section class="hero">
-        <h1>Así de Bolas</h1>
+        <h1>La Forja</h1>
         <p>El deporte como nunca lo has vivido. Análisis, historias y pasión por el juego.</p>
     </section>
 
@@ -2678,7 +2687,7 @@ body.cropper-open .container {
                 <input type="text" id="artTitle" placeholder="Ej. La historia del fútbol..." required>
                 
                 <label for="artSummary">Sumario / Extracto *</label>
-                <textarea id="artSummary" placeholder="Un resumen corto (máx. 200 caracteres)" maxlength="200" required></textarea>
+                <textarea id="artSummary" placeholder="Un resumen corto (máx. 500 caracteres)" maxlength="500" required></textarea>
                 
                 <div id="imageSection">
     <label for="artImageFile">Imagen de portada *</label>

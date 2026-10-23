@@ -949,7 +949,7 @@ try {
     }
     contentHTML += mainContent;
     
-    contentHTML += `<hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;"><p style="font-size: 13px; color: #999; font-style: italic;">Contenido publicado en Así de Bolas.</p>`;
+    contentHTML += `<hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;"><p style="font-size: 13px; color: #999; font-style: italic;">Contenido publicado en La Forja.</p>`;
     
     readingBody.innerHTML = contentHTML;
     readingModal.classList.add('active');
@@ -1239,7 +1239,7 @@ async function downloadPDF(article) {
     doc.setTextColor(241, 250, 238);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
-    doc.text('ASÍ DE BOLAS | CONTENIDO DEPORTIVO', margin, 15);
+    doc.text('LA FORJA | CONTENIDO DEPORTIVO', margin, 15);
     
     doc.setFontSize(9);
     doc.setTextColor(230, 200, 200);
@@ -1314,29 +1314,43 @@ async function downloadPDF(article) {
         }
     }
 
-    // ⭐ SUMARIO EN CAJA DESTACADA
+                       // ⭐ SUMARIO EN CAJA DESTACADA
     if (article.summary) {
-        const summaryLines = doc.splitTextToSize(article.summary, maxWidth - 10);
-        const boxHeight = (summaryLines.length * 5) + 10;
+        const boxWidth = pageWidth - 30; 
+        const boxMargin = 15; 
+        const textPadding = 15;
+        
+        // ⭐ EL TRUCO: Le restamos 25 extra para forzar el salto de línea antes del borde
+        const summaryLines = doc.splitTextToSize(article.summary, boxWidth - (textPadding * 2) - 25);
+        
+        const lineHeight = 6.5; 
+        const boxHeight = (summaryLines.length * lineHeight) + 20; 
         
         if (yPos + boxHeight > pageHeight - 30) {
             doc.addPage();
             yPos = 25;
         }
         
-        doc.setFillColor(241, 250, 238);
-        doc.rect(margin, yPos - 4, maxWidth, boxHeight, 'F');
-        doc.setDrawColor(230, 57, 70);
-        doc.setLineWidth(1);
-        doc.line(margin, yPos - 4, margin, yPos - 4 + boxHeight);
+        // Fondo verde
+        doc.setFillColor(241, 250, 238); 
+        doc.rect(boxMargin, yPos - 4, boxWidth, boxHeight, 'F');
         
+        // Línea roja
+        doc.setDrawColor(136, 25, 56); 
+        doc.setLineWidth(1.5);
+        doc.line(boxMargin, yPos - 4, boxMargin, yPos - 4 + boxHeight);
+        
+        // Texto
         doc.setTextColor(80, 80, 80);
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(11);
-        doc.text(summaryLines, margin + 8, yPos + 4);
-        yPos += boxHeight + 8;
+        
+        summaryLines.forEach((line, index) => {
+            doc.text(line, boxMargin + textPadding, yPos + 8 + (index * lineHeight));
+        });
+        
+        yPos += boxHeight + 12; 
     }
-
     // ⭐ FUNCIÓN AUXILIAR PARA SALTOS DE PÁGINA
     function checkPageBreak(neededHeight = 15) {
         if (yPos + neededHeight > pageHeight - 20) {
@@ -1478,7 +1492,7 @@ async function downloadPDF(article) {
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
         doc.setFont('helvetica', 'normal');
-        doc.text('Así de Bolas · Contenido Deportivo', margin, pageHeight - 9);
+        doc.text('La Forja · Contenido Deportivo', margin, pageHeight - 9);
         doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, pageHeight - 9, { align: 'right' });
     }
 
@@ -1506,7 +1520,7 @@ function shareArticle() {
     if (!currentReadingArticle) return;
     const article = currentReadingArticle;
     const shareUrl = `${SITE_URL}?article=${article.id}`;
-    const shareText = `Te comparto de Así de Bolas: "${article.title}" de ${article.author}`;
+    const shareText = `Te comparto de La Forja: "${article.title}" de ${article.author}`;
     
     if (navigator.share) {
         navigator.share({ title: article.title, text: shareText, url: shareUrl })
